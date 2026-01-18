@@ -9,10 +9,10 @@ export default function Navbar() {
     "text-white after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-[2px] after:bg-white";
 
   return (
-    <nav className="w-full bg-black border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+    <nav className="w-full bg-black border-b border-gray-800 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
 
-      {/* Logo */}
-      <div className="flex items-center gap-2">
+      
+      <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
         <img
           src="/assets/logo.png"
           alt="Ascend Logo"
@@ -23,8 +23,8 @@ export default function Navbar() {
         </span>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex items-center gap-8">
+     
+      <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-8 w-full sm:w-auto">
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -43,7 +43,6 @@ export default function Navbar() {
           Challenges
         </NavLink>
 
-        
         <NavLink
           to="/friends"
           className={({ isActive }) =>
@@ -51,7 +50,7 @@ export default function Navbar() {
           }
         >
           Friends
-              </NavLink>
+        </NavLink>
 
         <NavLink
           to="/leaderboard"
@@ -61,11 +60,6 @@ export default function Navbar() {
         >
           Leaderboard
         </NavLink>
-
-
-
-         
-      
 
         <NavLink
           to="/profile"
@@ -77,8 +71,8 @@ export default function Navbar() {
         </NavLink>
       </div>
 
-      {/* User Button */}
-      <div className="flex items-center">
+      
+      <div className="flex items-center justify-center sm:justify-end w-full sm:w-auto">
         <UserButton
           appearance={{
             elements: {
