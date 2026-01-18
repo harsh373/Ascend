@@ -1,7 +1,7 @@
-import express, { Request, Response } from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+import express, { Request, Response } from "express";
+import cors from "cors";
 import userRoutes from "./routes/userRoutes"
 import { connectDB } from "./config/db";
 import taskRoutes from "./routes/taskRoutes"
@@ -16,22 +16,19 @@ import challengeRoutes from "./routes/challengeRoutes"
 
 const app = express();
 
-
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true
-  })
-);
+app.use(cors());
 app.use(express.json());
 
-connectDB();
+let isConnected = false;
 
-
-app.post("/direct-test", (req, res) => {
-  console.log("DIRECT TEST HIT");
-  res.send("Direct route works");
+app.use(async (_req, _res, next) => {
+  if (!isConnected) {
+    await connectDB();
+    isConnected = true;
+  }
+  next();
 });
+
 
 
 
@@ -46,14 +43,8 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/heavy-task", heavyTaskRoutes);
 app.use("/api/approval", approvalRoutes);
 app.use("/api/habits", habitRoutes)
-app.use("/api/challenges",challengeRoutes)
+app.use("/api/challenges", challengeRoutes)
+
+export default app;
 
 
-
-
-const PORT = process.env.PORT || 5000;
-
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
