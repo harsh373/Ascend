@@ -9,10 +9,10 @@ export default function Navbar() {
     "text-white after:content-[''] after:absolute after:left-0 after:-bottom-2 after:w-full after:h-[2px] after:bg-white";
 
   return (
-    <nav className="w-full bg-black border-b border-gray-800 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+    <nav className="hidden md:flex w-full bg-black border-b border-gray-800 px-6 py-4 justify-between items-center">
 
       
-      <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+      <div className="flex items-center gap-2">
         <img
           src="/assets/logo.png"
           alt="Ascend Logo"
@@ -24,7 +24,7 @@ export default function Navbar() {
       </div>
 
      
-      <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 sm:gap-8 w-full sm:w-auto">
+      <div className="flex items-center gap-8">
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -71,16 +71,14 @@ export default function Navbar() {
         </NavLink>
       </div>
 
-      
-      <div className="flex items-center justify-center sm:justify-end w-full sm:w-auto">
-        <UserButton
-          appearance={{
-            elements: {
-              avatarBox: "w-8 h-8",
-            },
-          }}
-        />
-      </div>
+     
+      <UserButton
+        appearance={{
+          elements: {
+            avatarBox: "w-8 h-8",
+          },
+        }}
+      />
     </nav>
   );
 }

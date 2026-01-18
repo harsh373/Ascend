@@ -1,26 +1,43 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 export default function MobileNav() {
-  const iconClass =
-    "w-6 h-6 opacity-70 group-hover:opacity-100 transition";
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
-  const activeClass = "opacity-100";
+  const iconClass =
+    "w-7 h-7 opacity-60 filter invert brightness-200 group-hover:opacity-100 transition-transform duration-200";
+
+  const activeClass = "opacity-100 scale-110";
 
   return (
     <>
-      {/* Top Profile Icon Bar */}
-      <div className="fixed top-0 left-0 right-0 h-12 bg-black border-b border-gray-800 flex justify-end items-center px-4 z-50 sm:hidden">
-        <NavLink to="/profile">
+      
+      <div className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-gray-800 flex items-center px-4 z-50 md:hidden">
+
+        
+        {!isHome && (
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/logo.png"
+              alt="Ascend"
+              className="w-7 h-7 object-contain"
+            />
+            <span className="text-lg font-bold text-red-500">ASCEND</span>
+          </div>
+        )}
+
+        
+        <NavLink to="/profile" className="ml-auto">
           <img
             src="/assets/profile.svg"
             alt="Profile"
-            className="w-8 h-8 object-contain"
+            className="w-9 h-9 object-contain filter invert brightness-200"
           />
         </NavLink>
       </div>
 
-      {/* Bottom Tab Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 flex justify-around items-center py-2 z-50 sm:hidden">
+    
+      <div className="fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-gray-800 flex justify-around items-center z-50 md:hidden">
 
         <NavLink to="/" className="group">
           {({ isActive }) => (
