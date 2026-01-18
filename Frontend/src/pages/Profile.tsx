@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-react";
+import { useUser, UserButton } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getUserProfile, getUserFriends } from "../api/userApi";
@@ -65,7 +65,7 @@ const Profile = () => {
     <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
-        {/* HEADER */}
+        
         <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 sm:p-8 mb-12">
           <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
 
@@ -99,6 +99,8 @@ const Profile = () => {
             {/* INFO */}
             <div className="flex-1 w-full">
               <div className="flex justify-between items-start gap-4">
+                
+                {/* Name + Rank */}
                 <div>
                   <h1 className="text-3xl font-black mb-1">
                     {profile.fullName || profile.username}
@@ -108,12 +110,17 @@ const Profile = () => {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => setShowFriends(true)}
-                  className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg font-semibold border border-zinc-700"
-                >
-                  👥 {friends.length} Friends
-                </button>
+                {/* Mobile Clerk Avatar (Sign Out) */}
+                <div className="block md:hidden">
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-10 h-10",
+                      },
+                    }}
+                  />
+                </div>
+
               </div>
 
               {/* XP BAR */}
@@ -148,11 +155,11 @@ const Profile = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Recent Missions</h2>
             <button
-    onClick={() => window.location.href = "/tasks"}
-    className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded font-semibold"
-  >
-    View All →
-  </button>
+              onClick={() => window.location.href = "/tasks"}
+              className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded font-semibold"
+            >
+              View All →
+            </button>
           </div>
 
           {profile.recentTasks.length === 0 ? (
