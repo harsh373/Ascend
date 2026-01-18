@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+* {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+
+::-webkit-scrollbar {
+  display: none;
+}
