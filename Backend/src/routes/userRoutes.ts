@@ -15,7 +15,7 @@ router.post("/create", createUser);
 router.get("/requests/:userId", getFriendRequests); 
 router.get("/:userId", getUserProfile);
 router.post("/upload-avatar", upload.single("image"), uploadAvatar);
-router.post("/users/onboarded", markUserOnboarded);
+router.post("/onboarded", markUserOnboarded);
 
 
 export default router;

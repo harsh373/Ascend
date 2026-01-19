@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { createHabits } from "../api/habitApi";
-import { markUserOnboarded } from "../api/userApi";
+import { createUser, getUserProfile, markUserOnboarded } from "../api/userApi";
 import { useNavigate } from "react-router-dom";
 
 export default function Onboarding() {
@@ -28,30 +28,68 @@ export default function Onboarding() {
     if (habits.length <= 3) return;
     setHabits(habits.filter((_, i) => i !== index));
   };
-
   const handleSubmit = async () => {
-    const cleanHabits = habits.map(h => h.trim()).filter(Boolean);
+  if (!user) {
+    setError("User not loaded. Please refresh.");
+    return;
+  }
 
-    if (cleanHabits.length < 3) {
-      setError("Minimum 3 habits required");
-      return;
-    }
+  const cleanHabits = habits.map(h => h.trim()).filter(Boolean);
 
+  if (cleanHabits.length < 3) {
+    setError("Minimum 3 habits required");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setError("");
+
+   
     try {
-      setLoading(true);
-      setError("");
-
-      await createHabits(user!.id, cleanHabits);
-      await markUserOnboarded(user!.id);   // 🔥 IMPORTANT FIX
-
-      navigate("/"); // go to Home
-    } catch (err) {
-      console.error(err);
-      setError("Failed to save habits");
-    } finally {
-      setLoading(false);
+      await getUserProfile(user.id);
+      console.log("User already exists in DB");
+    } catch {
+      console.log("User not in DB, creating...");
+      const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+      await createUser(
+        user.id,
+        user.username || user.firstName || "User",
+        fullName || "Anonymous User",
+        user.imageUrl || ""
+      );
+      console.log("User created in DB");
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-  };
+
+    
+   
+    const habitResponse = await createHabits(user.id, cleanHabits);
+    console.log("Habits created:", habitResponse.data);
+
+    // Mark user as onboarded
+    console.log("Marking user as onboarded...");
+    const onboardResponse = await markUserOnboarded(user.id);
+    console.log("User onboarded:", onboardResponse.data);
+
+    console.log("=== ONBOARDING SUCCESS ===");
+
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    
+    navigate("/", { replace: true });
+
+  } catch (err: any) {
+    console.error("=== ONBOARDING ERROR ===");
+    console.error("Error:", err);
+    console.error("Error response:", err.response?.data);
+    setError(err.response?.data?.message || "Failed to save habits");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-4">

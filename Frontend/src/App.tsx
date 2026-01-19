@@ -14,11 +14,12 @@ import Challenges from "./pages/Challenges";
 import AllTasks from "./pages/AllTasks";
 import LandingPage from "./pages/LandingPage";
 
+import AuthGate from "./components/AuthGate";
+
 function App() {
   return (
     <div className="min-h-screen bg-black flex flex-col w-full overflow-x-hidden">
 
-      
       <SignedOut>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -26,30 +27,38 @@ function App() {
         </Routes>
       </SignedOut>
 
-     
       <SignedIn>
-       
         <Navbar />
-
-    
         <MobileNav />
 
-       
         <main className="flex-1 w-full px-3 sm:px-6 max-w-full pt-12 pb-16">
           <Routes>
-            <Route path="/" element={<Home />} />
+
+            {/* HOME — only for onboarded users */}
+            <Route
+              path="/"
+              element={
+                <AuthGate>
+                  <Home />
+                </AuthGate>
+              }
+            />
+
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/approvals" element={<Approvals />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<Onboarding/>} />
+
+       
+     
+
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/tasks" element={<AllTasks />} />
           </Routes>
         </main>
 
-       
         <Footer />
       </SignedIn>
 

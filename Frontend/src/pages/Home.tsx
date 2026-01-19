@@ -19,33 +19,56 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (!isLoaded || !user) return;
+  if (!isLoaded || !user) return;
 
+  const init = async () => {
     const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
 
-    createUser(
-      user.id,
-      user.username || user.firstName || "User",
-      fullName || "Anonymous User",
-      user.imageUrl || ""
-    );
+    try {
+      // Try to fetch existing user
+      const profile = await getUserProfile(user.id);
+      
+      // Check if user is onboarded
+      if (!profile.data.onboarded) {
+        navigate("/onboarding");
+        return;
+      }
+      
+    } catch {
+      // User doesn't exist, create them first
+      console.log("Creating new user...");
+      await createUser(
+        user.id,
+        user.username || user.firstName || "User",
+        fullName || "Anonymous User",
+        user.imageUrl || ""
+      );
+      console.log("User created, redirecting to onboarding");
+      
+      // Wait a bit to ensure DB write completes
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Now redirect to onboarding
+      navigate("/onboarding");
+      return;
+    }
 
-    checkOnboarding();
+    // Only load data if user is onboarded
     loadTasks();
     loadHabits();
-  }, [isLoaded, user]);
+    loadUserXP();
+  };
 
-  const checkOnboarding = async () => {
-    const res = await getUserProfile(user!.id);
+  init();
+}, [isLoaded, user, navigate]);
 
-    if (!res.data.onboarded) {
-      navigate("/onboarding");
-    } else {
-      setXpData({
-        xp: res.data.xp,
-        level: res.data.level,
-      });
-    }
+  const loadUserXP = async () => {
+    if (!userId) return;
+    const res = await getUserProfile(userId);
+    setXpData({
+      xp: res.data.xp,
+      level: res.data.level,
+    });
   };
 
   const loadTasks = async () => {
@@ -66,19 +89,13 @@ export default function Home() {
     await createTask({ userId, title });
     setTitle("");
     loadTasks();
+    loadUserXP();
   };
 
   const handleCompleteTask = async (taskId: string) => {
     await completeTask(taskId);
-
-    const profile = await getUserProfile(user!.id);
-
-    setXpData({
-      xp: profile.data.xp,
-      level: profile.data.level,
-    });
-
     loadTasks();
+    loadUserXP();
   };
 
   const handleCompleteHabit = async (habitId: string) => {

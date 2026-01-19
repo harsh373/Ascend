@@ -97,6 +97,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
       level: user.level,
       xp: user.xp,
       streak: user.streak,
+      onboarded: user.onboarded, 
       joinDate: user.createdAt,
       friendsCount: user.friends?.length || 0,
       stats: {
@@ -174,13 +175,14 @@ export const uploadAvatar = async (req: any, res: Response) => {
 export const markUserOnboarded = async (req: Request, res: Response) => {
   try {
     const { clerkUserId } = req.body;
+    console.log("Marking onboarded for:", clerkUserId);
 
     const user = await User.findOneAndUpdate(
       { clerkUserId },
       { onboarded: true },
       { new: true }
     );
-
+    console.log("Updated user:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
