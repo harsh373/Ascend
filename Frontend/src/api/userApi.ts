@@ -1,14 +1,19 @@
 import api from "./axios";
 
 export const createUser = (
-clerkUserId: string, username: string, fullName: string, imageUrl: string) => {
+  clerkUserId: string,
+  username: string,
+  fullName: string,
+  imageUrl: string
+) => {
   return api.post("/users/create", {
     clerkUserId,
     username,
     fullName,
-    imageUrl
+    profileImage: imageUrl   
   });
 };
+
 
 // Get user profile (self or friend)
 export const getUserProfile = (userId: string) =>
