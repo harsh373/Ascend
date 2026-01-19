@@ -29,12 +29,13 @@ export const createUser = async (req: Request, res: Response) => {
       clerkUserId,
       username,
       fullName,
-      profileImage: profileImage || "",  
+      profileImage: profileImage || "",
       xp: 0,
       level: 1,
       streak: 0,
       friends: [],
-      friendRequests: []
+      friendRequests: [],
+      onboarded: false,   
     });
 
     console.log("User created successfully:", user._id);
@@ -46,6 +47,7 @@ export const createUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 export const getFriendRequests = async (req: Request, res: Response) => {
   try {
@@ -167,3 +169,25 @@ export const uploadAvatar = async (req: any, res: Response) => {
   }
 };
 
+//for onobarding and taking habit at first only
+
+export const markUserOnboarded = async (req: Request, res: Response) => {
+  try {
+    const { clerkUserId } = req.body;
+
+    const user = await User.findOneAndUpdate(
+      { clerkUserId },
+      { onboarded: true },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

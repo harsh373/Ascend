@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { createHabits } from "../api/habitApi";
+import { markUserOnboarded } from "../api/userApi";
 import { useNavigate } from "react-router-dom";
 
 export default function Onboarding() {
@@ -41,6 +42,7 @@ export default function Onboarding() {
       setError("");
 
       await createHabits(user!.id, cleanHabits);
+      await markUserOnboarded(user!.id);   // 🔥 IMPORTANT FIX
 
       navigate("/"); // go to Home
     } catch (err) {

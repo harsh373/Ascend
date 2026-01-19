@@ -12,7 +12,11 @@ const userSchema = new mongoose.Schema({
   type: [String], 
     default: [],
   
-},
+  },
+  onboarded: {
+    type: Boolean,
+    default: false,
+  },
 
 friendRequests: {
   type: [String], 

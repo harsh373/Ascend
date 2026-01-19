@@ -17,3 +17,9 @@ export const getUserProfile = (userId: string) =>
 // Get user's friends list
 export const getUserFriends = (userId: string) =>
   api.get(`/friends/list/${userId}`);
+
+//get user onboarding
+export const markUserOnboarded = (clerkUserId: string) => {
+  return api.post("/users/onboarded", { clerkUserId });
+};
+

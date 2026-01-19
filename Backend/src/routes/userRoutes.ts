@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
-import { createUser, getFriendRequests, getUserProfile,uploadAvatar} from "../controllers/userController";
+import { createUser, getFriendRequests, getUserProfile,uploadAvatar,markUserOnboarded} from "../controllers/userController";
 import { upload } from "../config/multer";
 
 
@@ -15,6 +15,7 @@ router.post("/create", createUser);
 router.get("/requests/:userId", getFriendRequests); 
 router.get("/:userId", getUserProfile);
 router.post("/upload-avatar", upload.single("image"), uploadAvatar);
+router.post("/users/onboarded", markUserOnboarded);
 
 
 export default router;

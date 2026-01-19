@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { createUser } from "../api/userApi";
+import { createUser, getUserProfile } from "../api/userApi";
 import { createTask, getUserTasks, completeTask } from "../api/taskApi";
 import { getHabits, completeHabit } from "../api/habitApi";
 import { useNavigate } from "react-router-dom";
@@ -23,16 +22,31 @@ export default function Home() {
     if (!isLoaded || !user) return;
 
     const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
-     createUser(
-  user.id,
-  user.username || user.firstName || "User",
-  fullName || "Anonymous User",
-  user.imageUrl || ""
-);
 
+    createUser(
+      user.id,
+      user.username || user.firstName || "User",
+      fullName || "Anonymous User",
+      user.imageUrl || ""
+    );
+
+    checkOnboarding();
     loadTasks();
     loadHabits();
   }, [isLoaded, user]);
+
+  const checkOnboarding = async () => {
+    const res = await getUserProfile(user!.id);
+
+    if (!res.data.onboarded) {
+      navigate("/onboarding");
+    } else {
+      setXpData({
+        xp: res.data.xp,
+        level: res.data.level,
+      });
+    }
+  };
 
   const loadTasks = async () => {
     if (!userId) return;
@@ -49,17 +63,19 @@ export default function Home() {
 
   const handleCreateTask = async () => {
     if (!title || !userId) return;
-    await createTask({ userId, title }); // XP fixed to 10
+    await createTask({ userId, title });
     setTitle("");
     loadTasks();
   };
 
   const handleCompleteTask = async (taskId: string) => {
-    const res = await completeTask(taskId);
+    await completeTask(taskId);
+
+    const profile = await getUserProfile(user!.id);
 
     setXpData({
-      xp: res.data.user.xp,
-      level: res.data.user.level,
+      xp: profile.data.xp,
+      level: profile.data.level,
     });
 
     loadTasks();
@@ -90,7 +106,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
+    <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10 pb-24">
 
       {/* HERO */}
       <section className="max-w-7xl mx-auto mb-10 flex justify-between items-center">
