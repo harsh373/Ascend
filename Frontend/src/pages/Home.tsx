@@ -4,6 +4,7 @@ import { createUser, getUserProfile } from "../api/userApi";
 import { createTask, getUserTasks, completeTask } from "../api/taskApi";
 import { getHabits, completeHabit } from "../api/habitApi";
 import { useNavigate } from "react-router-dom";
+import InstallButton from "../components/InstallButton";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -137,6 +138,9 @@ export default function Home() {
           <p className="text-zinc-400 text-lg max-w-xl">
             You either execute today or fall behind.
           </p>
+           <div className="mt-4">
+            <InstallButton />
+          </div>
         </div>
 
         <div className="w-36 h-36 rounded-full border-4 border-red-500 flex flex-col items-center justify-center">
