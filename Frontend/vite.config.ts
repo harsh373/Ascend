@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "ASCEND",
-        short_name: "ASCEND",
+        name: "Ascend",
+        short_name: "Ascend",
         description: "Compete with friends. Build discipline. Level up.",
         start_url: "/",
         display: "standalone",
