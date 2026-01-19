@@ -5,8 +5,7 @@ import {
   getFriendsLeaderboard,
 } from "../api/leaderboardApi";
 
-const DEFAULT_AVATAR =
-  "https://ui-avatars.com/api/?name=User&background=111827&color=fff";
+const DEFAULT_AVATAR = "/assets/user.png";
 
 export default function Leaderboard() {
   const { user } = useUser();
@@ -113,6 +112,9 @@ export default function Leaderboard() {
 
                     <img
                       src={u.profileImage || DEFAULT_AVATAR}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR;
+                      }}
                       className="w-10 h-10 rounded-full object-cover border border-zinc-700"
                     />
 

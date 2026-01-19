@@ -9,8 +9,7 @@ import {
 import api from "../api/axios";
 import ChallengeModal from "../components/ChallengeModel";
 
-const DEFAULT_AVATAR =
-  "https://ui-avatars.com/api/?name=User&background=111827&color=fff";
+const DEFAULT_AVATAR = "/assets/user.png";
 
 export default function Friends() {
   const { user } = useUser();
