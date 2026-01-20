@@ -54,7 +54,7 @@ export const getHabits = async (req: Request, res: Response) => {
 // Complete Habit (Daily)
 export const completeHabit = async (req: Request, res: Response) => {
   try {
-    const { habitId } = req.params;   // <-- PARAMS, not body
+    const { habitId } = req.params;
 
     if (!habitId) {
       return res.status(400).json({ message: "habitId is required" });
@@ -65,26 +65,44 @@ export const completeHabit = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Habit not found" });
     }
 
-    const today = new Date().toDateString();
-    const lastCompletedDate = habit.lastCompleted?.toDateString();
+    
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+  
+    const lastCompletedStart = habit.lastCompleted 
+      ? new Date(
+          habit.lastCompleted.getFullYear(), 
+          habit.lastCompleted.getMonth(), 
+          habit.lastCompleted.getDate()
+        )
+      : null;
 
-    if (lastCompletedDate === today) {
+    
+    if (lastCompletedStart && todayStart.getTime() === lastCompletedStart.getTime()) {
       return res.status(400).json({ message: "Already completed today" });
     }
 
-    // Reset streak if user skipped a day
-    if (habit.lastCompleted) {
-      const diff =
-        (Date.now() - habit.lastCompleted.getTime()) /
-        (1000 * 60 * 60 * 24);
+    
+    if (lastCompletedStart) {
+      const daysDiff = Math.floor(
+        (todayStart.getTime() - lastCompletedStart.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-      if (diff > 1.5) {
-        habit.streak = 0;
+      if (daysDiff === 1) {
+   
+        habit.streak += 1;
+      } else if (daysDiff > 1) {
+        
+        habit.streak = 1;
       }
+      
+    } else {
+      
+      habit.streak = 1;
     }
 
-    habit.streak += 1;
-    habit.lastCompleted = new Date();
+    habit.lastCompleted = now;
     await habit.save();
 
     const xpGain = 10 + habit.streak * 2;
