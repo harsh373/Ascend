@@ -24,9 +24,25 @@ export const createChallenge = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Challenge duration must be at least 1 hour' });
   }
 
+  
+  const challenger = await User.findOne({ clerkUserId: challengerId });
+  const opponent = await User.findOne({ clerkUserId: opponentId });
+
+  if (!challenger) {
+    return res.status(404).json({ error: 'Challenger user not found' });
+  }
+
+  if (!opponent) {
+    return res.status(404).json({ error: 'Opponent user not found' });
+  }
+
   const challenge = await Challenge.create({
     challengerId,
     opponentId,
+    challengerName: challenger.fullName,
+    challengerPhoto: challenger.profileImage,
+    opponentName: opponent.fullName,
+    opponentPhoto: opponent.profileImage,
     title,
     xpReward,
     requiresProof,
@@ -35,6 +51,7 @@ export const createChallenge = async (req: Request, res: Response) => {
 
   res.json(challenge);
 };
+
 //Respond to challenge
 
 export const respondToChallenge = async (req: Request, res: Response) => {
@@ -160,8 +177,8 @@ export const uploadChallengeProof = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Challenge not found" });
     }
 
-    // multer-storage-cloudinary already uploaded the file
-    challenge.proof = req.file.path;   // <-- Cloudinary URL
+    // multer-storage-cloudinary 
+    challenge.proof = req.file.path;   
     challenge.status = "submitted";
 
     await challenge.save();
