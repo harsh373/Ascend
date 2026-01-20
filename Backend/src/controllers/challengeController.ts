@@ -64,27 +64,33 @@ export const reviewChallenge = async (req: Request, res: Response) => {
   if (approve) {
     ch.status = "approved";
 
-    await User.findOneAndUpdate(
-      { clerkUserId: ch.opponentId },
-      { $inc: { xp: ch.xpReward } }
-    );
+    const user = await User.findOne({ clerkUserId: ch.opponentId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.xp += ch.xpReward;
+    user.level = Math.floor(user.xp / 100) + 1;
+
+    await user.save();
   } else {
     ch.status = "failed";
 
     const penalty = Math.floor(ch.xpReward * 0.05);
 
-    await User.findOneAndUpdate(
-      { clerkUserId: ch.challengerId },
-      { $inc: { xp: -penalty } }
-    );
+    const user = await User.findOne({ clerkUserId: ch.challengerId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.xp -= penalty;
+    user.level = Math.floor(user.xp / 100) + 1;
+
+    await user.save();
   }
 
   await ch.save();
   res.json({ message: "Review completed" });
 };
 
-//auto expiry controller
 
+//auto expiry controller
 const failExpiredChallenges = async () => {
   const expired = await Challenge.find({
     status: "accepted",
@@ -96,14 +102,17 @@ const failExpiredChallenges = async () => {
 
     const penalty = Math.floor(ch.xpReward * 0.05);
 
-    await User.findOneAndUpdate(
-      { clerkUserId: ch.challengerId },
-      { $inc: { xp: -penalty } }
-    );
+    const user = await User.findOne({ clerkUserId: ch.challengerId });
+    if (!user) continue;
 
+    user.xp -= penalty;
+    user.level = Math.floor(user.xp / 100) + 1;
+
+    await user.save();
     await ch.save();
   }
 };
+
 
 //get all the challenges to
 
