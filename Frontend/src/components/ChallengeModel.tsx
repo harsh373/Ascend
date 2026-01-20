@@ -13,15 +13,23 @@ export default function ChallengeModal({
   const challengerId = user?.id;
 
   const [title, setTitle] = useState("");
-  const [xp, setXp] = useState(50);
+  const [xp, setXp] = useState(10);
   const [hours, setHours] = useState(24);
   const [requiresProof, setRequiresProof] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const sendChallenge = async () => {
     if (!title.trim() || !challengerId) return;
 
+    // Validate XP range before sending
+    if (xp < 1 || xp > 50) {
+      setError("XP must be between 1 and 50");
+      return;
+    }
+
     setLoading(true);
+    setError("");
 
     try {
       await createChallenge({
@@ -34,11 +42,34 @@ export default function ChallengeModal({
       });
 
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Challenge failed", err);
+      setError(err.response?.data?.error || "Failed to create challenge");
     } finally {
       setLoading(false);
     }
+  };
+
+
+  const handleXpChange = (value: string) => {
+    
+    if (value === "") {
+      setXp(0);
+      return;
+    }
+    
+    const numValue = parseInt(value);
+    
+    
+    if (!isNaN(numValue)) {
+      setXp(numValue);
+    }
+  };
+
+  
+  const handleXpBlur = () => {
+    if (xp < 1) setXp(1);
+    if (xp > 50) setXp(50);
   };
 
   return (
@@ -48,6 +79,13 @@ export default function ChallengeModal({
         <h2 className="text-xl font-bold text-red-500 text-center">
           Challenge Your Friend
         </h2>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
         {/* Task */}
         <div className="space-y-1">
@@ -62,13 +100,17 @@ export default function ChallengeModal({
 
         {/* XP */}
         <div className="space-y-1">
-          <label className="text-sm text-zinc-400">XP Reward</label>
+          <label className="text-sm text-zinc-400">
+            XP Reward <span className="text-zinc-600">(1-50)</span>
+          </label>
           <input
             type="number"
-            min={10}
+            min={1}
+            max={50}
             className="w-full bg-black border border-zinc-700 p-3 rounded-lg"
-            value={xp}
-            onChange={(e) => setXp(Number(e.target.value))}
+            value={xp === 0 ? "" : xp}
+            onChange={(e) => handleXpChange(e.target.value)}
+            onBlur={handleXpBlur}
           />
         </div>
 

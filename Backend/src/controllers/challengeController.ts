@@ -8,6 +8,22 @@ import cloudinary from "../config/cloudinary";
 export const createChallenge = async (req: Request, res: Response) => {
   const { challengerId, opponentId, title, xpReward, requiresProof, hours } = req.body;
 
+  
+  if (!xpReward || xpReward < 1 || xpReward > 50) {
+    return res.status(400).json({ 
+      error: 'XP reward must be between 1 and 50' 
+    });
+  }
+
+  
+  if (!title || title.trim().length === 0) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  if (!hours || hours < 1) {
+    return res.status(400).json({ error: 'Challenge duration must be at least 1 hour' });
+  }
+
   const challenge = await Challenge.create({
     challengerId,
     opponentId,
@@ -19,7 +35,6 @@ export const createChallenge = async (req: Request, res: Response) => {
 
   res.json(challenge);
 };
-
 //Respond to challenge
 
 export const respondToChallenge = async (req: Request, res: Response) => {
