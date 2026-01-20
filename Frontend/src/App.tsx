@@ -15,6 +15,7 @@ import AllTasks from "./pages/AllTasks";
 import LandingPage from "./pages/LandingPage";
 
 import AuthGate from "./components/AuthGate";
+import ManageHabits from "./pages/ManageHabits";
 
 function App() {
   return (
@@ -49,8 +50,8 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/approvals" element={<Approvals />} />
-            <Route path="/onboarding" element={<Onboarding/>} />
-
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/manage-habits" element={<ManageHabits />} />
        
      
 

@@ -122,3 +122,75 @@ export const completeHabit = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+//update habit controller
+
+export const updateHabit = async (req: Request, res: Response) => {
+  try {
+    const { habitId } = req.params;
+    const { title } = req.body;
+
+    if (!title || title.trim().length < 3 || title.trim().length > 50) {
+      return res.status(400).json({ message: "Title must be 3-50 characters" });
+    }
+
+    const habit = await Habit.findByIdAndUpdate(
+      habitId,
+      { title: title.trim() },
+      { new: true }
+    );
+
+    if (!habit) {
+      return res.status(404).json({ message: "Habit not found" });
+    }
+
+    res.json({ message: "Habit updated", habit });
+  } catch (err) {
+    console.error("Update habit error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//delete habit for the user
+
+export const deleteHabit = async (req: Request, res: Response) => {
+  try {
+    const { habitId } = req.params;
+
+    const habit = await Habit.findByIdAndDelete(habitId);
+
+    if (!habit) {
+      return res.status(404).json({ message: "Habit not found" });
+    }
+
+    res.json({ message: "Habit deleted successfully" });
+  } catch (err) {
+    console.error("Delete habit error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+//adding single habit controller for more after updating
+
+export const addHabit = async (req: Request, res: Response) => {
+  try {
+    const { userId, title } = req.body;
+
+    if (!title || title.trim().length < 3 || title.trim().length > 50) {
+      return res.status(400).json({ message: "Title must be 3-50 characters" });
+    }
+
+    const habit = await Habit.create({
+      userId,
+      title: title.trim(),
+      streak: 0,
+      lastCompleted: null
+    });
+
+    res.json({ message: "Habit added", habit });
+  } catch (err) {
+    console.error("Add habit error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

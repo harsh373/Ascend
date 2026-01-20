@@ -150,8 +150,20 @@ export default function Home() {
       </section>
 
       {/* HABITS */}
+          
       <section className="max-w-7xl mx-auto mb-12">
-        <h2 className="text-2xl font-bold mb-4">Today's Habits</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Today's Habits</h2>
+          
+          {/* Manage Habits Button */}
+          <button
+            onClick={() => navigate("/manage-habits")}
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition text-sm sm:text-base"
+          >
+            <span className="text-lg">⚙️</span>
+            <span className="hidden sm:inline">Manage</span>
+          </button>
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {habits.map((h) => {
