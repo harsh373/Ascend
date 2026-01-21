@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import userRoutes from "./routes/userRoutes"
 import { connectDB } from "./config/db";
+import { clerkMiddleware } from '@clerk/express';
 import taskRoutes from "./routes/taskRoutes"
 import friendRoutes from "./routes/friendRoutes"
 import leaderboardRoutes from "./routes/leaderboardRoutes"
@@ -11,6 +12,7 @@ import heavyTaskRoutes from "./routes/heavyTaskRoutes"
 import approvalRoutes from "./routes/approvalRoutes"
 import habitRoutes from "./routes/habitRoutes"
 import challengeRoutes from "./routes/challengeRoutes"
+import profileRoutes from "./routes/profileRoutes"
 
 
 
@@ -29,6 +31,8 @@ app.use(async (_req, _res, next) => {
   next();
 });
 
+app.use(clerkMiddleware());
+
 
 
 
@@ -44,6 +48,7 @@ app.use("/api/heavy-task", heavyTaskRoutes);
 app.use("/api/approval", approvalRoutes);
 app.use("/api/habits", habitRoutes)
 app.use("/api/challenges", challengeRoutes)
+app.use("/api/profile",profileRoutes)
 
 export default app;
 

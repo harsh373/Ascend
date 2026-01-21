@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import {
   searchUsers,
   sendRequest,
@@ -13,6 +14,7 @@ const DEFAULT_AVATAR = "/assets/user.png";
 
 export default function Friends() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const userId = user?.id;
 
   const [query, setQuery] = useState("");
@@ -155,16 +157,20 @@ export default function Friends() {
                 return (
                   <div
                     key={u.clerkUserId}
-                    className="bg-black border border-zinc-800 rounded-lg p-4 flex justify-between items-center hover:border-red-500 transition"
+                    className="bg-black border border-zinc-800 rounded-lg p-4 flex justify-between items-center hover:border-red-500 transition group"
                   >
-                    <div className="flex items-center gap-4">
+                    {/* CLICKABLE PROFILE SECTION */}
+                    <div 
+                      className="flex items-center gap-4 flex-1 cursor-pointer"
+                      onClick={() => navigate(`/profile/${u.clerkUserId}`)}
+                    >
                       <img
                         src={getAvatar(u)}
-                        className="w-12 h-12 rounded-full border border-zinc-700 object-cover"
+                        className="w-12 h-12 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
                       />
 
                       <div>
-                        <p className="font-semibold">
+                        <p className="font-semibold group-hover:text-red-400 transition">
                           {u.fullName || u.username}
                         </p>
                         <p className="text-sm text-zinc-400">
@@ -173,23 +179,26 @@ export default function Friends() {
                       </div>
                     </div>
 
-                    {alreadyFriend ? (
-                      <span className="text-emerald-400 font-semibold">
-                        Friends
-                      </span>
-                    ) : alreadyRequested ? (
-                      <span className="text-yellow-400 font-semibold">
-                        Requested
-                      </span>
-                    ) : (
-                      <button
-                        disabled={sending === u.clerkUserId}
-                        onClick={() => handleAdd(u.clerkUserId)}
-                        className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-semibold disabled:opacity-50"
-                      >
-                        {sending === u.clerkUserId ? "Sending..." : "Add"}
-                      </button>
-                    )}
+                    {/* ACTION BUTTONS */}
+                    <div className="flex items-center gap-3">
+                      {alreadyFriend ? (
+                        <span className="text-emerald-400 font-semibold">
+                          Friends
+                        </span>
+                      ) : alreadyRequested ? (
+                        <span className="text-yellow-400 font-semibold">
+                          Requested
+                        </span>
+                      ) : (
+                        <button
+                          disabled={sending === u.clerkUserId}
+                          onClick={() => handleAdd(u.clerkUserId)}
+                          className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-semibold disabled:opacity-50 transition"
+                        >
+                          {sending === u.clerkUserId ? "Sending..." : "Add"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -205,23 +214,28 @@ export default function Friends() {
               {requests.map((r) => (
                 <div
                   key={r.clerkUserId}
-                  className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex justify-between items-center hover:border-red-500 transition"
+                  className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex justify-between items-center hover:border-red-500 transition group"
                 >
-                  <div className="flex items-center gap-4">
+                  {/* CLICKABLE PROFILE SECTION */}
+                  <div 
+                    className="flex items-center gap-4 flex-1 cursor-pointer"
+                    onClick={() => navigate(`/profile/${r.clerkUserId}`)}
+                  >
                     <img
                       src={getAvatar(r)}
-                      className="w-12 h-12 rounded-full border border-zinc-700 object-cover"
+                      className="w-12 h-12 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
                     />
 
-                    <p className="font-semibold">
+                    <p className="font-semibold group-hover:text-red-400 transition">
                       {r.fullName || r.username}
                     </p>
                   </div>
 
+                  {/* ACTION BUTTON */}
                   <button
                     disabled={accepting === r.clerkUserId}
                     onClick={() => handleAccept(r.clerkUserId)}
-                    className="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg font-semibold disabled:opacity-50"
+                    className="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg font-semibold disabled:opacity-50 transition"
                   >
                     {accepting === r.clerkUserId ? "Accepting..." : "Accept"}
                   </button>
@@ -237,7 +251,7 @@ export default function Friends() {
 
           {friends.length === 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center text-zinc-400">
-              No friends yet. That’s a weakness.
+              No friends yet. That's a weakness.
             </div>
           )}
 
@@ -245,16 +259,20 @@ export default function Friends() {
             {friends.map((f) => (
               <div
                 key={f.clerkUserId}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-red-500 transition"
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-red-500 transition group"
               >
-                <div className="flex items-center gap-4 mb-4">
+                {/* CLICKABLE PROFILE SECTION */}
+                <div 
+                  className="flex items-center gap-4 mb-4 cursor-pointer"
+                  onClick={() => navigate(`/profile/${f.clerkUserId}`)}
+                >
                   <img
                     src={getAvatar(f)}
-                    className="w-14 h-14 rounded-full border border-zinc-700 object-cover"
+                    className="w-14 h-14 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
                   />
 
                   <div>
-                    <p className="font-bold text-lg">
+                    <p className="font-bold text-lg group-hover:text-red-400 transition">
                       {f.fullName || f.username}
                     </p>
                     <p className="text-zinc-400 text-sm">
@@ -263,6 +281,7 @@ export default function Friends() {
                   </div>
                 </div>
 
+                {/* XP & CHALLENGE BUTTON */}
                 <div className="flex justify-between items-center bg-black rounded-lg p-3 gap-2">
                   <div>
                     <span className="text-zinc-400 text-sm">XP</span>
@@ -270,8 +289,11 @@ export default function Friends() {
                   </div>
 
                   <button
-                    onClick={() => setOpenChallenge(f.clerkUserId)}
-                    className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent profile navigation when clicking challenge
+                      setOpenChallenge(f.clerkUserId);
+                    }}
+                    className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition"
                   >
                     Challenge
                   </button>

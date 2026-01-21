@@ -17,6 +17,8 @@ import LandingPage from "./pages/LandingPage";
 import AuthGate from "./components/AuthGate";
 import ManageHabits from "./pages/ManageHabits";
 import ChallengeHistory from "./pages/ChallengeHistory";
+import UserChallenges from "./pages/UserChallenges";
+import UserTasks from "./pages/UserTasks";
 
 function App() {
   return (
@@ -50,6 +52,8 @@ function App() {
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
+            <Route path="/profile/:userId/tasks" element={<UserTasks />} />
+            <Route path="/profile/:userId/challenges" element={<UserChallenges />} />
             <Route path="/approvals" element={<Approvals />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/manage-habits" element={<ManageHabits />} />

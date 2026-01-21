@@ -17,11 +17,17 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  longestStreak: { type: Number, default: 0 },
 
 friendRequests: {
   type: [String], 
   default: [],
-},
+  },
+
+  isPublic: { 
+    type: Boolean, 
+    default: true  
+  },
 },{timestamps:true});
 
 export const User = mongoose.model("User", userSchema);
