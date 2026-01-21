@@ -21,6 +21,7 @@ import ChallengeHistory from "./pages/ChallengeHistory";
 import UserChallenges from "./pages/UserChallenges";
 import UserTasks from "./pages/UserTasks";
 import AnalyticsTracker from "./components/AnalyticsTracker";
+import { Analytics } from "@vercel/analytics/react";
 
 ReactGA.initialize(import.meta.env.VITE_GA_ID);
 
@@ -70,6 +71,7 @@ function App() {
             <Route path="/tasks" element={<AllTasks />} />
           </Routes>
         </main>
+        <Analytics/>
 
         <Footer />
       </SignedIn>
