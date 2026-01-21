@@ -71,10 +71,11 @@ function App() {
             <Route path="/tasks" element={<AllTasks />} />
           </Routes>
         </main>
-        <Analytics/>
-
+        
         <Footer />
       </SignedIn>
+      <Analytics/>
+
 
     </div>
   );
