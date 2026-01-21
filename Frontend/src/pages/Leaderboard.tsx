@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import {
   getGlobalLeaderboard,
   getFriendsLeaderboard,
@@ -9,6 +10,7 @@ const DEFAULT_AVATAR = "/assets/user.png";
 
 export default function Leaderboard() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const userId = user?.id;
 
   const [tab, setTab] = useState<"friends" | "global">("friends");
@@ -43,7 +45,6 @@ export default function Leaderboard() {
     <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
       <div className="max-w-4xl mx-auto">
 
-        {/* HEADER */}
         <section className="mb-10">
           <h1 className="text-4xl sm:text-5xl font-black text-red-500 mb-2">
             Leaderboard
@@ -53,7 +54,6 @@ export default function Leaderboard() {
           </p>
         </section>
 
-        {/* TABS */}
         <div className="flex gap-3 mb-8">
           <button
             onClick={() => setTab("friends")}
@@ -78,19 +78,16 @@ export default function Leaderboard() {
           </button>
         </div>
 
-        {/* LOADING */}
         {loading && (
           <p className="text-center text-zinc-400 py-10">Loading...</p>
         )}
 
-        {/* EMPTY */}
         {!loading && data.length === 0 && (
           <p className="text-center text-zinc-500 py-10">
             No rankings available.
           </p>
         )}
 
-        {/* LIST */}
         {!loading && data.length > 0 && (
           <div className="space-y-2">
             {data.map((u, i) => {
@@ -99,10 +96,11 @@ export default function Leaderboard() {
               return (
                 <div
                   key={u.clerkUserId}
-                  className={`flex items-center justify-between px-4 py-3 rounded-lg border ${
+                  onClick={() => navigate(`/profile/${u.clerkUserId}`)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer group transition ${
                     isYou
-                      ? "border-red-500 bg-zinc-900"
-                      : "border-zinc-800 bg-zinc-900"
+                      ? "border-red-500 bg-zinc-900 hover:border-red-400"
+                      : "border-zinc-800 bg-zinc-900 hover:border-red-500"
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -115,11 +113,11 @@ export default function Leaderboard() {
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR;
                       }}
-                      className="w-10 h-10 rounded-full object-cover border border-zinc-700"
+                      className="w-10 h-10 rounded-full object-cover border border-zinc-700 group-hover:border-red-500 transition"
                     />
 
                     <div>
-                      <p className="font-semibold">
+                      <p className="font-semibold group-hover:text-red-400 transition">
                         {u.fullName || u.username}
                         {isYou && (
                           <span className="ml-2 text-xs text-red-400">
