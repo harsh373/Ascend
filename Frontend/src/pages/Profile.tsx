@@ -2,7 +2,7 @@ import { useUser, UserButton } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getPublicProfile, togglePrivacy } from "../api/profileApi";
-import { getUserFriends } from "../api/userApi"; // Keep this for friends list
+import { getUserFriends } from "../api/userApi"; 
 import { uploadAvatar } from "../api/uploadApi";
 
 const DEFAULT_AVATAR = "/assets/user.png";
@@ -53,10 +53,10 @@ const Profile = () => {
     const targetId = userId || user?.id;
     if (!targetId) return;
 
-    // Fetch profile data
+   
     getPublicProfile(targetId)
       .then((res) => {
-        console.log("🔍 Profile API Response:", res.data);
+        console.log("Profile API Response:", res.data);
         console.log("  - isFriend:", res.data.isFriend);
         console.log("  - isOwnProfile:", res.data.isOwnProfile);
         console.log("  - Current user ID:", user?.id);
@@ -65,7 +65,7 @@ const Profile = () => {
       })
       .catch((err) => console.error("Failed to fetch profile:", err));
 
-    // Fetch friends list
+   
     getUserFriends(targetId)
       .then((res) => setFriends(res.data))
       .catch((err) => console.error("Failed to fetch friends:", err));
@@ -111,7 +111,7 @@ const Profile = () => {
 
   const avatar = profile.profileImage || DEFAULT_AVATAR;
   
-  // FIXED: Better own profile detection
+  
   const isOwnProfile = 
     profile.isOwnProfile || 
     (!userId && user?.id === profile.clerkUserId) ||
@@ -123,11 +123,11 @@ const Profile = () => {
     <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
       <div className="max-w-6xl mx-auto">
         
-        {/* PROFILE HEADER */}
+       
         <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 sm:p-8 mb-8">
           <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
             
-            {/* AVATAR */}
+          
             <div className="relative">
               <img
                 src={avatar}
@@ -159,7 +159,7 @@ const Profile = () => {
             <div className="flex-1 w-full">
               <div className="flex justify-between items-start gap-4 mb-4">
                 
-                {/* Name + Streak */}
+                
                 <div>
                   <h1 className="text-3xl font-black mb-1">
                     {profile.fullName || profile.username}
@@ -174,7 +174,7 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* Privacy Toggle & UserButton */}
+                
                 <div className="flex items-center gap-3">
                   {isOwnProfile ? (
                     <>
@@ -183,7 +183,7 @@ const Profile = () => {
                         disabled={togglingPrivacy}
                         className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold text-sm transition disabled:opacity-50"
                       >
-                        {profile.isPublic ? "🌐 Public" : "🔒 Private"}
+                        {profile.isPublic ? "🌐Public" : "🔒Private"}
                       </button>
                       <UserButton
                         appearance={{
@@ -199,7 +199,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* XP BAR */}
+              
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-zinc-400">Level Progress</span>
@@ -218,7 +218,7 @@ const Profile = () => {
           </div>
         </section>
 
-        {/* PRIVATE PROFILE MESSAGE */}
+        
         {!profile.canViewDetails && (
           <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-12 text-center mb-8">
             <div className="text-6xl mb-4">🔒</div>
@@ -231,7 +231,7 @@ const Profile = () => {
           </div>
         )}
 
-        {/* STATS GRID (only if can view details) */}
+        
         {profile.canViewDetails && profile.stats && (
           <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             <Stat label="Total XP" value={profile.stats.totalXp} />
@@ -246,7 +246,7 @@ const Profile = () => {
           </section>
         )}
 
-        {/* CURRENT HABITS (only if can view details) */}
+        
         {profile.canViewDetails && profile.habits && profile.habits.length > 0 && (
           <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
             <h2 className="text-xl font-bold mb-4">✅ Current Habits</h2>
@@ -307,7 +307,7 @@ const Profile = () => {
         {/* FRIEND ACTION BUTTONS (if viewing someone else's profile) */}
         {!isOwnProfile && profile.canViewDetails && (() => {
           // Debug logging
-          console.log("🔍 Friend Button Logic:");
+          console.log("🔍Friend Button Logic:");
           console.log("  - profile.isFriend:", profile.isFriend);
           console.log("  - Showing:", profile.isFriend ? "Friends Badge" : "Add Friend Button");
           
@@ -315,24 +315,24 @@ const Profile = () => {
             <section className="flex gap-4">
               {profile.isFriend ? (
                 <div className="flex-1 bg-emerald-600 px-6 py-3 rounded-lg font-bold text-center flex items-center justify-center gap-2">
-                  ✅ Friends
+                  ✅Friends
                 </div>
               ) : (
                 <button className="flex-1 bg-red-600 hover:bg-red-500 px-6 py-3 rounded-lg font-bold transition">
-                  🤝 Add Friend
+                  🤝Add Friend
                 </button>
               )}
               <button 
                 onClick={() => setShowChallengeModal(true)}
                 className="flex-1 bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-bold transition"
               >
-                ⚡ Send Challenge
+                ⚡Send Challenge
               </button>
             </section>
           );
         })()}
 
-        {/* FRIENDS MODAL */}
+        
         {showFriends && (
           <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4">
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md">
@@ -441,7 +441,7 @@ const ChallengeModal = ({ opponentId, opponentName, onClose }: ChallengeModalPro
     try {
       setSending(true);
       
-      // Import createChallenge from your challengeApi
+      
       const { createChallenge } = await import("../api/challengeApi");
       
       await createChallenge({
@@ -467,7 +467,7 @@ const ChallengeModal = ({ opponentId, opponentName, onClose }: ChallengeModalPro
   return (
     <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg">
-        {/* HEADER */}
+    
         <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
           <h3 className="text-xl font-bold">⚡ Challenge {opponentName}</h3>
           <button 

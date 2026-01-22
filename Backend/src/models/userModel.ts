@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
   longestStreak: { type: Number, default: 0 },
+  lastActivityDate: Date ,
 
 friendRequests: {
   type: [String], 

@@ -80,6 +80,7 @@ export const completeHabit = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Already completed today" });
     }
 
+    // Update HABIT streak
     if (lastCompletedStart) {
       const daysDiff = Math.floor(
         (todayStart.getTime() - lastCompletedStart.getTime()) / (1000 * 60 * 60 * 24)
@@ -102,14 +103,54 @@ export const completeHabit = async (req: Request, res: Response) => {
     
     const user = await User.findOne({ clerkUserId: habit.userId });
     if (user) {
+     
       user.xp += xpGain;
-      user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1;  
+      user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1;
+
+      
+      const userLastActivityDate = user.lastActivityDate
+        ? new Date(
+            user.lastActivityDate.getFullYear(),
+            user.lastActivityDate.getMonth(),
+            user.lastActivityDate.getDate()
+          )
+        : null;
+
+      if (userLastActivityDate) {
+        const daysSinceLastActivity = Math.floor(
+          (todayStart.getTime() - userLastActivityDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysSinceLastActivity === 0) {
+          
+        } else if (daysSinceLastActivity === 1) {
+          
+          user.streak += 1;
+          
+          
+          if (user.streak > user.longestStreak) {
+            user.longestStreak = user.streak;
+          }
+        } else {
+          
+          user.streak = 1;
+        }
+      } else {
+        
+        user.streak = 1;
+        user.longestStreak = 1;
+      }
+
+      
+      user.lastActivityDate = now;
+
       await user.save();
     }
 
     res.json({
       message: "Habit completed",
       streak: habit.streak,
+      userStreak: user?.streak || 0,
       xpGained: xpGain,
     });
   } catch (err) {
