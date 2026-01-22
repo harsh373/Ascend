@@ -100,7 +100,7 @@ export const reviewChallenge = async (req: Request, res: Response) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.xp += ch.xpReward;
-    user.level = Math.floor(user.xp / 100) + 1;
+    user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1;  // ✅ FIXED FORMULA
 
     await user.save();
   } else {
@@ -108,11 +108,11 @@ export const reviewChallenge = async (req: Request, res: Response) => {
 
     const penalty = Math.floor(ch.xpReward * 0.05);
 
-    const user = await User.findOne({ clerkUserId: ch.challengerId });
+    const user = await User.findOne({ clerkUserId: ch.opponentId });  
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.xp -= penalty;
-    user.level = Math.floor(user.xp / 100) + 1;
+    user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1; 
 
     await user.save();
   }
@@ -120,7 +120,6 @@ export const reviewChallenge = async (req: Request, res: Response) => {
   await ch.save();
   res.json({ message: "Review completed" });
 };
-
 
 //auto expiry controller
 const failExpiredChallenges = async () => {
@@ -138,7 +137,7 @@ const failExpiredChallenges = async () => {
     if (!user) continue;
 
     user.xp -= penalty;
-    user.level = Math.floor(user.xp / 100) + 1;
+    user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1;
 
     await user.save();
     await ch.save();

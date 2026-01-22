@@ -44,7 +44,7 @@ export const completeTask = async (req: any, res: any) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.xp += task.xp;
-    user.level = Math.floor(user.xp / 100) + 1;
+    user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1;
 
     await user.save();
 
