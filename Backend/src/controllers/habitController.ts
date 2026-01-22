@@ -65,11 +65,9 @@ export const completeHabit = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Habit not found" });
     }
 
-    
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-  
     const lastCompletedStart = habit.lastCompleted 
       ? new Date(
           habit.lastCompleted.getFullYear(), 
@@ -78,27 +76,21 @@ export const completeHabit = async (req: Request, res: Response) => {
         )
       : null;
 
-    
     if (lastCompletedStart && todayStart.getTime() === lastCompletedStart.getTime()) {
       return res.status(400).json({ message: "Already completed today" });
     }
 
-    
     if (lastCompletedStart) {
       const daysDiff = Math.floor(
         (todayStart.getTime() - lastCompletedStart.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysDiff === 1) {
-   
         habit.streak += 1;
       } else if (daysDiff > 1) {
-        
         habit.streak = 1;
       }
-      
     } else {
-      
       habit.streak = 1;
     }
 
@@ -107,10 +99,13 @@ export const completeHabit = async (req: Request, res: Response) => {
 
     const xpGain = 10 + habit.streak * 2;
 
-    await User.findOneAndUpdate(
-      { clerkUserId: habit.userId },
-      { $inc: { xp: xpGain } }
-    );
+    
+    const user = await User.findOne({ clerkUserId: habit.userId });
+    if (user) {
+      user.xp += xpGain;
+      user.level = Math.floor(Math.sqrt(user.xp / 100)) + 1;  
+      await user.save();
+    }
 
     res.json({
       message: "Habit completed",
