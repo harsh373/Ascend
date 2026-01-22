@@ -22,13 +22,15 @@ import UserChallenges from "./pages/UserChallenges";
 import UserTasks from "./pages/UserTasks";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import { Analytics } from "@vercel/analytics/react";
+import ScrollToTop from "./components/ScrollToTop";
 
 ReactGA.initialize(import.meta.env.VITE_GA_ID);
 
 function App() {
   return (
     <div className="min-h-screen bg-black flex flex-col w-full overflow-x-hidden">
-       <AnalyticsTracker /> 
+      <AnalyticsTracker /> 
+      <ScrollToTop />
 
       <SignedOut>
         <Routes>
