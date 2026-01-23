@@ -49,6 +49,16 @@ export default function MobileNav() {
           )}
         </NavLink>
 
+        <NavLink to="/friends" className="group">
+          {({ isActive }) => (
+            <img
+              src="/assets/friends.svg"
+              className={`${iconClass} ${isActive ? activeClass : ""}`}
+              alt="Friends"
+            />
+          )}
+        </NavLink>
+
         <NavLink to="/challenges" className="group">
           {({ isActive }) => (
             <img
@@ -59,15 +69,7 @@ export default function MobileNav() {
           )}
         </NavLink>
 
-        <NavLink to="/friends" className="group">
-          {({ isActive }) => (
-            <img
-              src="/assets/friends.svg"
-              className={`${iconClass} ${isActive ? activeClass : ""}`}
-              alt="Friends"
-            />
-          )}
-        </NavLink>
+        
 
         <NavLink to="/leaderboard" className="group">
           {({ isActive }) => (

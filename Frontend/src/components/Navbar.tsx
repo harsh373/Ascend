@@ -34,6 +34,15 @@ export default function Navbar() {
           Home
         </NavLink>
 
+         <NavLink
+          to="/friends"
+          className={({ isActive }) =>
+            isActive ? `${baseLink} ${activeLink}` : baseLink
+          }
+        >
+          Friends
+        </NavLink>
+
         <NavLink
           to="/challenges"
           className={({ isActive }) =>
@@ -43,14 +52,7 @@ export default function Navbar() {
           Challenges
         </NavLink>
 
-        <NavLink
-          to="/friends"
-          className={({ isActive }) =>
-            isActive ? `${baseLink} ${activeLink}` : baseLink
-          }
-        >
-          Friends
-        </NavLink>
+       
 
         <NavLink
           to="/leaderboard"
