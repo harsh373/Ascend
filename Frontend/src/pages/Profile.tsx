@@ -184,8 +184,8 @@ const Profile = () => {
             profile.canViewDetails && (
               <div className="grid grid-cols-2 gap-3">
                 {profile.isFriend ? (
-                  <div className="px-4 py-2.5 bg-emerald-600 rounded-lg text-sm font-semibold text-center">
-                    ✅ Friends
+                  <div className="px-4 py-2.5 bg-emerald-700 text-white text-bold rounded-lg text-sm font-semibold text-center ">
+                    Friends
                   </div>
                 ) : (
                   <button
@@ -198,7 +198,7 @@ const Profile = () => {
                 )}
                 <button
                   onClick={() => setShowChallengeModal(true)}
-                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-bold rounded-lg text-sm font-semibold transition"
                 >
                   Challenge
                 </button>
