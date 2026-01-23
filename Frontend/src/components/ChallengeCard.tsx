@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import {
   respondChallenge,
   submitChallenge,
@@ -32,11 +33,13 @@ type ChallengeCardProps = {
 
 export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProps) {
   const { user } = useUser();
+  const navigate = useNavigate();
   const userId = user?.id;
 
   const {
     _id,
     challengerId,
+    opponentId,
     challengerName,
     challengerPhoto,
     opponentName,
@@ -61,6 +64,12 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
   const isChallenger = challengerId === userId;
   const displayName = isChallenger ? opponentName : challengerName;
   const displayPhoto = isChallenger ? opponentPhoto : challengerPhoto;
+  const displayUserId = isChallenger ? opponentId : challengerId;
+
+  // Navigate to user profile
+  const handleProfileClick = () => {
+    navigate(`/profile/${displayUserId}`);
+  };
 
   // Status badge styling
   const statusConfig = {
@@ -74,15 +83,21 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 hover:border-zinc-700 transition">
-      {/* HEADER: Profile Photo + Name */}
+      {/* HEADER: Profile Photo + Name - NOW CLICKABLE */}
       <div className="flex items-center gap-3 mb-4">
         <img
           src={displayPhoto || "/assets/user.png"}
           alt={displayName}
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-zinc-700 object-cover"
+          onClick={handleProfileClick}
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-zinc-700 object-cover cursor-pointer hover:border-red-500 transition"
         />
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-base sm:text-lg truncate">{displayName}</h3>
+          <h3 
+            onClick={handleProfileClick}
+            className="font-bold text-base sm:text-lg truncate cursor-pointer hover:text-red-400 transition"
+          >
+            {displayName}
+          </h3>
           <p className="text-xs sm:text-sm text-zinc-500">{timeAgo(createdAt)}</p>
         </div>
         
@@ -162,7 +177,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
         </div>
       )}
 
-      {/* ACTIVE - Complete button or proof upload */}
+      
       {viewMode === "active" && status === "accepted" && (
         <div>
           {requiresProof ? (
@@ -206,7 +221,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
               }
               className="flex-1 bg-emerald-600 hover:bg-emerald-500 px-4 py-3 sm:py-2 rounded-lg font-semibold disabled:opacity-50 transition"
             >
-              Approve ✓
+              Approve
             </button>
 
             <button
@@ -218,7 +233,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
               }
               className="flex-1 bg-red-600 hover:bg-red-500 px-4 py-3 sm:py-2 rounded-lg font-semibold disabled:opacity-50 transition"
             >
-              Reject ✗
+              Reject
             </button>
           </div>
         </div>
