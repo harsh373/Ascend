@@ -119,10 +119,11 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-zinc-950">
       {/* HEADER */}
-      <div className="bg-zinc-900 border-b border-zinc-800">
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          {/* TOP ROW - Avatar and Name */}
-          <div className="flex items-center gap-4 mb-4">
+      <div className="bg-zinc-900 lg:bg-zinc-950 pb-6">
+        <div className="max-w-5xl mx-auto px-4 pt-6">
+          <div className="lg:max-w-3xl lg:mx-auto lg:bg-zinc-900 lg:border lg:border-zinc-800 lg:rounded-xl lg:p-6">
+            {/* TOP ROW - Avatar and Name */}
+            <div className="flex items-center gap-4 mb-4">
             {/* AVATAR */}
             <div className="relative">
               <img
@@ -204,11 +205,13 @@ const Profile = () => {
               </div>
             )
           )}
+          </div>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="lg:max-w-3xl lg:mx-auto">
         {!profile.canViewDetails ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
             <div className="text-5xl mb-4">🔒</div>
@@ -282,6 +285,7 @@ const Profile = () => {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* FRIENDS MODAL */}
