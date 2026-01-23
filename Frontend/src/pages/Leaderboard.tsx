@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
-import {
-  getGlobalLeaderboard,
-  getFriendsLeaderboard,
-} from "../api/leaderboardApi";
+import { getFriendsLeaderboard } from "../api/leaderboardApi";
 
 const DEFAULT_AVATAR = "/assets/user.png";
 
@@ -13,26 +10,20 @@ export default function Leaderboard() {
   const navigate = useNavigate();
   const userId = user?.id;
 
-  const [tab, setTab] = useState<"friends" | "global">("friends");
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadLeaderboard();
-  }, [tab]);
+  }, []);
 
   const loadLeaderboard = async () => {
     try {
       setLoading(true);
 
-      if (tab === "friends") {
-        if (!userId) return;
-        const res = await getFriendsLeaderboard(userId);
-        setData(res.data);
-      } else {
-        const res = await getGlobalLeaderboard();
-        setData(res.data);
-      }
+      if (!userId) return;
+      const res = await getFriendsLeaderboard(userId);
+      setData(res.data);
 
       setLoading(false);
     } catch (err) {
@@ -50,42 +41,21 @@ export default function Leaderboard() {
             Leaderboard
           </h1>
           <p className="text-zinc-400">
-            Track your rank. Beat your friends.
+            Compete with friends you trust. Real progress, real accountability.
           </p>
         </section>
-
-        <div className="flex gap-3 mb-8">
-          <button
-            onClick={() => setTab("friends")}
-            className={`px-5 py-2 rounded-lg font-semibold border ${
-              tab === "friends"
-                ? "bg-red-600 border-red-500"
-                : "bg-zinc-900 border-zinc-800 hover:border-red-500"
-            }`}
-          >
-            Friends
-          </button>
-
-          <button
-            onClick={() => setTab("global")}
-            className={`px-5 py-2 rounded-lg font-semibold border ${
-              tab === "global"
-                ? "bg-red-600 border-red-500"
-                : "bg-zinc-900 border-zinc-800 hover:border-red-500"
-            }`}
-          >
-            Global
-          </button>
-        </div>
 
         {loading && (
           <p className="text-center text-zinc-400 py-10">Loading...</p>
         )}
 
         {!loading && data.length === 0 && (
-          <p className="text-center text-zinc-500 py-10">
-            No rankings available.
-          </p>
+          <div className="text-center py-10">
+            <p className="text-zinc-500 mb-4">No friends added yet.</p>
+            <p className="text-zinc-600 text-sm">
+              Add friends to see how you rank against them!
+            </p>
+          </div>
         )}
 
         {!loading && data.length > 0 && (
