@@ -21,6 +21,7 @@ interface ProfileData {
   isPublic: boolean;
   isOwnProfile: boolean;
   isFriend: boolean;
+  hasSentRequest?: boolean; 
   canViewDetails: boolean;
   stats?: {
     totalXp: number;
@@ -118,13 +119,13 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      {/* HEADER */}
+      
       <div className="bg-zinc-900 lg:bg-zinc-950 pb-6">
         <div className="max-w-5xl mx-auto px-4 pt-6">
           <div className="lg:max-w-3xl lg:mx-auto lg:bg-zinc-900 lg:border lg:border-zinc-800 lg:rounded-xl lg:p-6">
-            {/* TOP ROW - Avatar and Name */}
+          
             <div className="flex items-center gap-4 mb-4">
-            {/* AVATAR */}
+            
             <div className="relative">
               <img
                 src={avatar}
@@ -171,7 +172,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* ACTION BUTTONS - Below everything */}
+          
           {isOwnProfile ? (
             <button
               onClick={handleTogglePrivacy}
@@ -187,13 +188,18 @@ const Profile = () => {
                   <div className="px-4 py-2.5 bg-emerald-700 text-white text-bold rounded-lg text-sm font-semibold text-center ">
                     Friends
                   </div>
+                ) : profile.hasSentRequest ? (
+                  
+                  <div className="px-4 py-2.5 bg-yellow-600 text-white rounded-lg text-sm font-semibold text-center">
+                    Requested
+                  </div>
                 ) : (
                   <button
                     onClick={handleSendFriendRequest}
                     disabled={sendingRequest}
                     className="px-4 py-2.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-semibold transition disabled:opacity-50"
                   >
-                    {sendingRequest ? "Requested" : "Add Friend"}
+                    {sendingRequest ? "Sending..." : "Add Friend"}
                   </button>
                 )}
                 <button

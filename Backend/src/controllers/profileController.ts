@@ -4,44 +4,42 @@ import { Habit } from "../models/habitModel";
 import Challenge from "../models/challenge";
 import Task from "../models/taskModel";
 
-// Extend Express Request to include Clerk auth (as function)
+// Extend Express Request 
 interface AuthenticatedRequest extends Express.Request {
   query: any;
   params: { userId: any; };
   auth: () => Promise<{ userId?: string } | null>;
 }
 
-// Get public profile (with privacy check)
+
 export const getPublicProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
-    const auth = await req.auth(); // ✅ FIXED: Call as function
-    const viewerId = auth?.userId; // Current logged-in user (from Clerk middleware)
+    const auth = await req.auth(); 
+    const viewerId = auth?.userId; 
 
-    // 🔍 DEBUG LOGGING
-    console.log("🔍 Profile Request Debug:");
-    console.log("  - userId (from URL):", userId);
-    console.log("  - viewerId (from Clerk):", viewerId);
-    console.log("  - Are they equal?:", userId === viewerId);
+    
 
-    // Find target user
+  
     const user = await User.findOne({ clerkUserId: userId });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if viewer is friends with this user
+    
     const isFriend = user.friends.includes(viewerId || "");
     const isOwnProfile = userId === viewerId;
+    
+    
+    const hasSentRequest = viewerId 
+      ? user.friendRequests.includes(viewerId)
+      : false;
 
-    console.log("  - isFriend:", isFriend);
-    console.log("  - isOwnProfile:", isOwnProfile);
-    console.log("  - user.friends array:", user.friends);
 
-    // Determine what data to show based on privacy
+    
     const canViewPrivateData = user.isPublic || isFriend || isOwnProfile;
 
-    // Basic data (always visible)
+    
     const basicData = {
       clerkUserId: user.clerkUserId,
       username: user.username,
@@ -52,6 +50,7 @@ export const getPublicProfile = async (req: AuthenticatedRequest, res: Response)
       isPublic: user.isPublic,
       isOwnProfile,
       isFriend,
+      hasSentRequest, 
     };
 
     // If can't view private data, return basic info only
@@ -88,7 +87,7 @@ export const getPublicProfile = async (req: AuthenticatedRequest, res: Response)
     // Fetch habits
     const habits = await Habit.find({ userId }).sort({ streak: -1 });
 
-    // Full profile data
+    
     return res.json({
       ...basicData,
       currentStreak: user.streak,
@@ -117,7 +116,7 @@ export const getPublicProfile = async (req: AuthenticatedRequest, res: Response)
 // Toggle privacy setting
 export const togglePrivacy = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const auth = await req.auth(); // ✅ FIXED: Call as function
+    const auth = await req.auth(); 
     const userId = auth?.userId;
     
     if (!userId) {
@@ -148,7 +147,7 @@ export const togglePrivacy = async (req: AuthenticatedRequest, res: Response) =>
 export const getUserTasks = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
-    const auth = await req.auth(); // ✅ FIXED: Call as function
+    const auth = await req.auth(); 
     const viewerId = auth?.userId;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -199,18 +198,18 @@ export const getUserTasks = async (req: AuthenticatedRequest, res: Response) => 
   }
 };
 
-// Get user's challenges (with privacy check)
+
 export const getUserChallenges = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { userId } = req.params;
-    const auth = await req.auth(); // ✅ FIXED: Call as function
+    const auth = await req.auth(); 
     const viewerId = auth?.userId;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const filter = req.query.filter as string || "all";
     const skip = (page - 1) * limit;
 
-    // Find user and check privacy
+    
     const user = await User.findOne({ clerkUserId: userId });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -228,7 +227,7 @@ export const getUserChallenges = async (req: AuthenticatedRequest, res: Response
       });
     }
 
-    // Build query based on filter
+    
     let query: any = { opponentId: userId };
 
     if (filter === "won") {
@@ -236,11 +235,11 @@ export const getUserChallenges = async (req: AuthenticatedRequest, res: Response
     } else if (filter === "lost") {
       query.status = "failed";
     } else {
-      // "all" - show both won and lost
+    
       query.status = { $in: ["approved", "failed"] };
     }
 
-    // Fetch challenges
+  
     const challenges = await Challenge.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
