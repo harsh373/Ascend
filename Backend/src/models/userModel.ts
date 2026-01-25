@@ -25,6 +25,11 @@ friendRequests: {
   default: [],
   },
 
+ sentRequests: {
+    type: [String], 
+    default: [],
+  }, 
+
   isPublic: { 
     type: Boolean, 
     default: true  

@@ -11,3 +11,7 @@ export const acceptRequest = (userId: string, fromId: string) =>
 
 export const getFriends = (userId: string) =>
   api.get(`/friends/list/${userId}`);
+
+
+export const getSentRequests = (userId: string) =>
+  api.get(`/friends/sent/${userId}`);

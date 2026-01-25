@@ -41,16 +41,25 @@ export const sendRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Check if already friends or request exists
     if (
       toUser.friendRequests.includes(fromId) ||
-      toUser.friends.includes(fromId)
+      toUser.friends.includes(fromId) ||
+      fromUser.sentRequests.includes(toId)
     ) {
       return res.status(400).json({ message: "Request already exists" });
     }
 
+    // Update BOTH users 
     await User.updateOne(
       { clerkUserId: toId },
       { $addToSet: { friendRequests: fromId } }
+    );
+
+    // Add to sender's outgoing requests
+    await User.updateOne(
+      { clerkUserId: fromId },
+      { $addToSet: { sentRequests: toId } }
     );
 
     res.json({ message: "Friend request sent" });
@@ -80,7 +89,7 @@ export const acceptRequest = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "No request to accept" });
     }
 
-    // Atomic updates
+    // Atomic updates - clean up request tracking on BOTH sides
     await User.updateOne(
       { clerkUserId: userId },
       {
@@ -92,6 +101,7 @@ export const acceptRequest = async (req: Request, res: Response) => {
     await User.updateOne(
       { clerkUserId: fromId },
       {
+        $pull: { sentRequests: userId },
         $addToSet: { friends: userId }
       }
     );
@@ -125,6 +135,29 @@ export const getFriends = async (req: Request, res: Response) => {
     res.json(friends);
   } catch (error) {
     console.error("Get friends error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// GET SENT REQUESTS 
+export const getSentRequests = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
+    }
+
+    const user = await User.findOne({ clerkUserId: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return just the array of IDs
+    res.json(user.sentRequests);
+  } catch (error) {
+    console.error("Get sent requests error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -6,6 +6,7 @@ import {
   sendRequest,
   getFriends,
   acceptRequest,
+  getSentRequests,
 } from "../api/friendApi";
 import { getFriendsLeaderboard } from "../api/leaderboardApi";
 import api from "../api/axios";
@@ -42,13 +43,9 @@ export default function Friends() {
     if (!userId) return;
     loadFriends();
     loadRequests();
+    loadSentRequests();
     loadLeaderboard();
   }, [userId]);
-
-  useEffect(() => {
-    const ids = requests.map(r => r.clerkUserId);
-    setRequested(ids);
-  }, [requests]);
 
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -74,6 +71,15 @@ export default function Friends() {
   const loadRequests = async () => {
     const res = await api.get(`/users/requests/${userId}`);
     setRequests(res.data);
+  };
+
+  const loadSentRequests = async () => {
+    try {
+      const res = await getSentRequests(userId!);
+      setRequested(res.data); // res.data is an array of clerkUserIds
+    } catch (err) {
+      console.error("Load sent requests failed:", err);
+    }
   };
 
   const loadLeaderboard = async () => {
@@ -113,6 +119,7 @@ export default function Friends() {
       await acceptRequest(userId, fromId);
       await loadFriends();
       await loadRequests();
+      await loadSentRequests();
       await loadLeaderboard();
     } catch (err) {
       console.error("Accept failed", err);
