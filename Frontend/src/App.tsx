@@ -1,10 +1,10 @@
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import Login from "./pages/Login";
-import Home from "./pages/Home";
+
 import Navbar from "./components/Navbar";
 import MobileNav from "./components/MobileNav";
 import { Route, Routes } from "react-router-dom";
-import Leaderboard from "./pages/Leaderboard";
+
 import Friends from "./pages/Friends";
 import Profile from "./pages/Profile";
 import Footer from "./components/Footer";
@@ -24,6 +24,7 @@ import AnalyticsTracker from "./components/AnalyticsTracker";
 import { Analytics } from "@vercel/analytics/react";
 import ScrollToTop from "./components/ScrollToTop";
 import Feed from "./pages/Feed";
+import Habits from "./pages/Habits";
 
 ReactGA.initialize(import.meta.env.VITE_GA_ID);
 
@@ -52,7 +53,8 @@ function App() {
               path="/"
               element={
                 <AuthGate>
-                  <Home />
+                  <Feed/>
+                
                 </AuthGate>
               }
             />
@@ -60,12 +62,12 @@ function App() {
               path="/habits"
               element={
                 <AuthGate>
-                  <Feed/>
+                    <Habits/>
                 </AuthGate>
               }
             />
 
-            <Route path="/leaderboard" element={<Leaderboard />} />
+            
             <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />

@@ -23,7 +23,7 @@ export default function Navbar() {
         </span>
       </div>
 
-     
+      
       <div className="flex items-center gap-8">
         <NavLink
           to="/"
@@ -31,16 +31,16 @@ export default function Navbar() {
             isActive ? `${baseLink} ${activeLink}` : baseLink
           }
         >
-          Home
+          Feed
         </NavLink>
 
-         <NavLink
-          to="/friends"
+        <NavLink
+          to="/habits"
           className={({ isActive }) =>
             isActive ? `${baseLink} ${activeLink}` : baseLink
           }
         >
-          Friends
+          Habits
         </NavLink>
 
         <NavLink
@@ -52,15 +52,13 @@ export default function Navbar() {
           Challenges
         </NavLink>
 
-       
-
         <NavLink
-          to="/leaderboard"
+          to="/friends"
           className={({ isActive }) =>
             isActive ? `${baseLink} ${activeLink}` : baseLink
           }
         >
-          Leaderboard
+          Friends
         </NavLink>
 
         <NavLink
@@ -73,7 +71,7 @@ export default function Navbar() {
         </NavLink>
       </div>
 
-     
+    
       <UserButton
         appearance={{
           elements: {
