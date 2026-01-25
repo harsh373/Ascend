@@ -16,6 +16,7 @@ export default defineConfig({
         description: "Compete with friends. Build discipline. Level up.",
         start_url: "/",
         display: "standalone",
+        orientation: "portrait-primary",
         background_color: "#000000",
         theme_color: "#dc2626",
         icons: [
