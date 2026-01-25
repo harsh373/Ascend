@@ -7,6 +7,7 @@ import {
   getFriends,
   acceptRequest,
 } from "../api/friendApi";
+import { getFriendsLeaderboard } from "../api/leaderboardApi";
 import api from "../api/axios";
 import ChallengeModal from "../components/ChallengeModel";
 
@@ -17,6 +18,10 @@ export default function Friends() {
   const navigate = useNavigate();
   const userId = user?.id;
 
+  
+  const [activeTab, setActiveTab] = useState<'friends' | 'leaderboard'>('friends');
+
+  // Friends tab state
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [friends, setFriends] = useState<any[]>([]);
@@ -29,10 +34,15 @@ export default function Friends() {
 
   const [openChallenge, setOpenChallenge] = useState<string | null>(null);
 
+  // Leaderboard state
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+
   useEffect(() => {
     if (!userId) return;
     loadFriends();
     loadRequests();
+    loadLeaderboard();
   }, [userId]);
 
   useEffect(() => {
@@ -66,6 +76,19 @@ export default function Friends() {
     setRequests(res.data);
   };
 
+  const loadLeaderboard = async () => {
+    try {
+      setLoadingLeaderboard(true);
+      if (!userId) return;
+      const res = await getFriendsLeaderboard(userId);
+      setLeaderboard(res.data);
+      setLoadingLeaderboard(false);
+    } catch (err) {
+      console.error("Leaderboard error:", err);
+      setLoadingLeaderboard(false);
+    }
+  };
+
   const handleAdd = async (toId: string) => {
     if (!userId) return;
 
@@ -90,6 +113,7 @@ export default function Friends() {
       await acceptRequest(userId, fromId);
       await loadFriends();
       await loadRequests();
+      await loadLeaderboard();
     } catch (err) {
       console.error("Accept failed", err);
     } finally {
@@ -100,16 +124,15 @@ export default function Friends() {
   const isFriend = (id: string) =>
     friends.some((f) => f.clerkUserId === id);
 
-  // 🔥 Smart avatar resolver
   const getAvatar = (u: any) =>
     u.profileImage || u.clerkImageUrl || DEFAULT_AVATAR;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
+    <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10 pb-24">
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <section className="mb-12">
+        <section className="mb-8">
           <span className="text-red-500 uppercase tracking-wider text-sm font-semibold">
             Your Network
           </span>
@@ -118,190 +141,309 @@ export default function Friends() {
             FRIENDS
           </h1>
 
-          <p className="text-zinc-400 text-lg max-w-2xl">
+          <p className="text-zinc-400 text-lg max-w-2xl mb-8">
             Build your circle. Social pressure creates progress.
           </p>
+
+      
+          <div className="max-w-2xl">
+            <div className="relative">
+              <img
+                src="/assets/search.svg"
+                alt="Search"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-40"
+              />
+              <input
+                className="w-full pl-12 pr-5 py-3 bg-white text-black border-0 rounded-lg placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                placeholder="Search friends..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+
+            
+            {query.trim().length >= 2 && (
+              <div className="mt-2 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                {searching && (
+                  <p className="text-zinc-400 p-4">Searching...</p>
+                )}
+
+                {!searching && results.length === 0 && (
+                  <p className="text-zinc-500 p-4">No users found.</p>
+                )}
+
+                {!searching && results.length > 0 && (
+                  <div className="divide-y divide-zinc-800">
+                    {results.map((u) => {
+                      const alreadyFriend = isFriend(u.clerkUserId);
+                      const alreadyRequested = requested.includes(u.clerkUserId);
+
+                      return (
+                        <div
+                          key={u.clerkUserId}
+                          className="p-4 flex justify-between items-center hover:bg-zinc-800 transition group"
+                        >
+                          <div 
+                            className="flex items-center gap-3 flex-1 cursor-pointer"
+                            onClick={() => {
+                              navigate(`/profile/${u.clerkUserId}`);
+                              setQuery(""); // Clear search after clicking
+                            }}
+                          >
+                            <img
+                              src={getAvatar(u)}
+                              alt={u.fullName || u.username}
+                              className="w-10 h-10 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
+                            />
+
+                            <div>
+                              <p className="font-semibold text-sm group-hover:text-red-400 transition">
+                                {u.fullName || u.username}
+                              </p>
+                              <p className="text-xs text-zinc-500">
+                                Level {u.level || 1}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            {alreadyFriend ? (
+                              <span className="text-emerald-400 font-semibold text-sm">
+                                Friends
+                              </span>
+                            ) : alreadyRequested ? (
+                              <span className="text-yellow-400 font-semibold text-sm">
+                                Requested
+                              </span>
+                            ) : (
+                              <button
+                                disabled={sending === u.clerkUserId}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAdd(u.clerkUserId);
+                                }}
+                                className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-md text-sm font-semibold disabled:opacity-50 transition"
+                              >
+                                {sending === u.clerkUserId ? "..." : "Add"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
-        {/* STATS */}
-        <section className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
-          <Stat label="Friends" value={friends.length} />
-          <Stat label="Requests" value={requests.length} />
-          <Stat label="Status" value="Active" />
+        
+        <section className="mb-8">
+          <div className="flex gap-2 border-b border-zinc-800">
+            <button
+              onClick={() => setActiveTab('friends')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'friends'
+                  ? 'text-red-500 border-b-2 border-red-500'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Friends
+            </button>
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'leaderboard'
+                  ? 'text-red-500 border-b-2 border-red-500'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              Leaderboard
+            </button>
+          </div>
         </section>
 
-        {/* SEARCH */}
-        <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-12">
-          <h2 className="text-2xl font-bold mb-2">Find Players</h2>
-          <p className="text-zinc-400 mb-6">Search and add competitors</p>
+       
+        {activeTab === 'friends' ? (
+          <>
+          
+            {requests.length > 0 && (
+              <section className="mb-12">
+                <h2 className="text-2xl font-bold mb-6">Friend Requests</h2>
 
-          <input
-            className="w-full px-5 py-4 bg-black border border-zinc-700 rounded-lg text-white placeholder:text-zinc-500 focus:outline-none focus:border-red-500"
-            placeholder="Search by username..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+                <div className="space-y-3">
+                  {requests.map((r) => (
+                    <div
+                      key={r.clerkUserId}
+                      className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex justify-between items-center hover:border-red-500 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200 group"
+                    >
+                      <div 
+                        className="flex items-center gap-4 flex-1 cursor-pointer"
+                        onClick={() => navigate(`/profile/${r.clerkUserId}`)}
+                      >
+                        <img
+                          src={getAvatar(r)}
+                          alt={r.fullName || r.username}
+                          className="w-12 h-12 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
+                        />
 
-          <div className="mt-6 space-y-3">
-            {searching && <p className="text-zinc-400">Searching...</p>}
+                        <p className="font-semibold group-hover:text-red-400 transition">
+                          {r.fullName || r.username}
+                        </p>
+                      </div>
 
-            {!searching && results.length === 0 && query && (
-              <p className="text-zinc-500">No users found.</p>
+                      <button
+                        disabled={accepting === r.clerkUserId}
+                        onClick={() => handleAccept(r.clerkUserId)}
+                        className="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg font-semibold disabled:opacity-50 transition"
+                      >
+                        {accepting === r.clerkUserId ? "Accepting..." : "Accept"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
 
-            {!searching &&
-              results.map((u) => {
-                const alreadyFriend = isFriend(u.clerkUserId);
-                const alreadyRequested = requested.includes(u.clerkUserId);
+            
+            <section>
+              <h2 className="text-2xl font-bold mb-6">Your Squad</h2>
 
-                return (
+              {friends.length === 0 && (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center text-zinc-400">
+                  No friends yet. That's a weakness.
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {friends.map((f) => (
                   <div
-                    key={u.clerkUserId}
-                    className="bg-black border border-zinc-800 rounded-lg p-4 flex justify-between items-center hover:border-red-500 transition group"
+                    key={f.clerkUserId}
+                    className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-red-500 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200 group"
                   >
-                    {/* CLICKABLE PROFILE SECTION */}
                     <div 
-                      className="flex items-center gap-4 flex-1 cursor-pointer"
-                      onClick={() => navigate(`/profile/${u.clerkUserId}`)}
+                      className="flex items-center gap-4 mb-4 cursor-pointer"
+                      onClick={() => navigate(`/profile/${f.clerkUserId}`)}
                     >
                       <img
-                        src={getAvatar(u)}
-                        className="w-12 h-12 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
+                        src={getAvatar(f)}
+                        alt={f.fullName || f.username}
+                        className="w-14 h-14 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
                       />
 
                       <div>
-                        <p className="font-semibold group-hover:text-red-400 transition">
-                          {u.fullName || u.username}
+                        <p className="font-bold text-lg group-hover:text-red-400 transition">
+                          {f.fullName || f.username}
                         </p>
-                        <p className="text-sm text-zinc-400">
-                          Level {u.level || 1}
+                        <p className="text-zinc-400 text-sm">
+                          Level {f.level}
                         </p>
                       </div>
                     </div>
 
-                    {/* ACTION BUTTONS */}
-                    <div className="flex items-center gap-3">
-                      {alreadyFriend ? (
-                        <span className="text-emerald-400 font-semibold">
-                          Friends
-                        </span>
-                      ) : alreadyRequested ? (
-                        <span className="text-yellow-400 font-semibold">
-                          Requested
-                        </span>
-                      ) : (
-                        <button
-                          disabled={sending === u.clerkUserId}
-                          onClick={() => handleAdd(u.clerkUserId)}
-                          className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-semibold disabled:opacity-50 transition"
-                        >
-                          {sending === u.clerkUserId ? "Sending..." : "Add"}
-                        </button>
-                      )}
+                    <div className="flex justify-between items-center bg-black rounded-lg p-3 gap-2">
+                      <div>
+                        <span className="text-zinc-400 text-sm">XP</span>
+                        <p className="font-black text-red-500">{f.xp}</p>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenChallenge(f.clerkUserId);
+                        }}
+                        className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition"
+                      >
+                        Challenge
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-          </div>
-        </section>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          
+          <section>
+            <h2 className="text-3xl font-bold mb-6">Leaderboard</h2>
+            <p className="text-zinc-400 mb-8">
+              Compete with friends you trust. Real progress, real accountability.
+            </p>
 
-        {/* REQUESTS */}
-        {requests.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Friend Requests</h2>
+            {loadingLeaderboard && (
+              <p className="text-center text-zinc-400 py-10">Loading...</p>
+            )}
 
-            <div className="space-y-3">
-              {requests.map((r) => (
-                <div
-                  key={r.clerkUserId}
-                  className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex justify-between items-center hover:border-red-500 transition group"
-                >
-                  {/* CLICKABLE PROFILE SECTION */}
-                  <div 
-                    className="flex items-center gap-4 flex-1 cursor-pointer"
-                    onClick={() => navigate(`/profile/${r.clerkUserId}`)}
-                  >
-                    <img
-                      src={getAvatar(r)}
-                      className="w-12 h-12 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
-                    />
+            {!loadingLeaderboard && leaderboard.length === 0 && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
+                <div className="text-6xl mb-4">🏆</div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  No rankings yet
+                </h3>
+                <p className="text-zinc-400">
+                  Add friends to compete on the leaderboard
+                </p>
+              </div>
+            )}
 
-                    <p className="font-semibold group-hover:text-red-400 transition">
-                      {r.fullName || r.username}
-                    </p>
-                  </div>
+            {!loadingLeaderboard && leaderboard.length > 0 && (
+              <div className="space-y-3">
+                {leaderboard.map((u, i) => {
+                  const isYou = u.clerkUserId === userId;
 
-                  {/* ACTION BUTTON */}
-                  <button
-                    disabled={accepting === r.clerkUserId}
-                    onClick={() => handleAccept(r.clerkUserId)}
-                    className="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg font-semibold disabled:opacity-50 transition"
-                  >
-                    {accepting === r.clerkUserId ? "Accepting..." : "Accept"}
-                  </button>
-                </div>
-              ))}
-            </div>
+                  return (
+                    <div
+                      key={u.clerkUserId}
+                      onClick={() => navigate(`/profile/${u.clerkUserId}`)}
+                      className={`flex items-center justify-between px-5 py-4 rounded-lg border cursor-pointer group hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200 ${
+                        isYou
+                          ? "border-red-500 bg-zinc-900 hover:border-red-400"
+                          : "border-zinc-800 bg-zinc-900 hover:border-red-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="w-10 text-zinc-400 font-black text-xl">
+                          #{i + 1}
+                        </span>
+
+                        <img
+                          src={u.profileImage || DEFAULT_AVATAR}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR;
+                          }}
+                          alt={u.fullName || u.username}
+                          className="w-12 h-12 rounded-full object-cover border border-zinc-700 group-hover:border-red-500 transition"
+                        />
+
+                        <div>
+                          <p className="font-semibold text-lg group-hover:text-red-400 transition">
+                            {u.fullName || u.username}
+                            {isYou && (
+                              <span className="ml-2 text-xs text-red-400 font-bold">
+                                YOU
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-sm text-zinc-400">
+                            Level {u.level}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-black text-red-500 text-2xl">
+                          {u.xp}
+                        </p>
+                        <p className="text-xs text-zinc-500 font-semibold">XP</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
-
-        {/* FRIEND LIST */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Your Squad</h2>
-
-          {friends.length === 0 && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center text-zinc-400">
-              No friends yet. That's a weakness.
-            </div>
-          )}
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {friends.map((f) => (
-              <div
-                key={f.clerkUserId}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-red-500 transition group"
-              >
-                {/* CLICKABLE PROFILE SECTION */}
-                <div 
-                  className="flex items-center gap-4 mb-4 cursor-pointer"
-                  onClick={() => navigate(`/profile/${f.clerkUserId}`)}
-                >
-                  <img
-                    src={getAvatar(f)}
-                    className="w-14 h-14 rounded-full border border-zinc-700 object-cover group-hover:border-red-500 transition"
-                  />
-
-                  <div>
-                    <p className="font-bold text-lg group-hover:text-red-400 transition">
-                      {f.fullName || f.username}
-                    </p>
-                    <p className="text-zinc-400 text-sm">
-                      Level {f.level}
-                    </p>
-                  </div>
-                </div>
-
-                {/* XP & CHALLENGE BUTTON */}
-                <div className="flex justify-between items-center bg-black rounded-lg p-3 gap-2">
-                  <div>
-                    <span className="text-zinc-400 text-sm">XP</span>
-                    <p className="font-black text-red-500">{f.xp}</p>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent profile navigation when clicking challenge
-                      setOpenChallenge(f.clerkUserId);
-                    }}
-                    className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition"
-                  >
-                    Challenge
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* CHALLENGE MODAL */}
         {openChallenge && (
@@ -315,10 +457,3 @@ export default function Friends() {
     </div>
   );
 }
-
-const Stat = ({ label, value }: any) => (
-  <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 hover:border-red-500 transition">
-    <p className="text-zinc-400 text-xs uppercase">{label}</p>
-    <p className="text-4xl font-black text-red-500">{value}</p>
-  </div>
-);
