@@ -41,7 +41,7 @@ export default function ActivityCard({
     navigate(`/profile/${userId}`);
   };
 
-  // Get emoji based on activity type
+  
   const getEmoji = () => {
     switch (activityType) {
       case 'habit':
@@ -59,7 +59,7 @@ export default function ActivityCard({
     }
   };
 
-  // Get additional context text
+
   const getContextText = () => {
     if (activityType === 'habit' && metadata.streakCount) {
       return `🔥 ${metadata.streakCount}-day streak`;
@@ -70,19 +70,19 @@ export default function ActivityCard({
     return null;
   };
 
-  // Get first name only
+  
   const getFirstName = (fullName: string) => {
     return fullName.split(' ')[0];
   };
 
-  // Parse activity text to make opponent's first name clickable in challenges
+  
   const renderActivityText = () => {
-    // For challenges, make the opponent's name clickable
+    
     if (activityType === 'challenge' && metadata.opponentId && metadata.opponentName) {
       const opponentFirstName = getFirstName(metadata.opponentName);
       const fullOpponentName = metadata.opponentName;
       
-      // Replace the full opponent name with clickable first name in the text
+      
       const textBeforeName = activityText.substring(0, activityText.lastIndexOf(fullOpponentName));
       const textAfterName = activityText.substring(activityText.lastIndexOf(fullOpponentName) + fullOpponentName.length);
       
@@ -100,7 +100,7 @@ export default function ActivityCard({
       );
     }
 
-    // For other activities, just return the text
+    
     return activityText;
   };
 
@@ -110,7 +110,7 @@ export default function ActivityCard({
       className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 sm:p-6 hover:border-red-500 hover:shadow-xl hover:shadow-red-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
     >
       <div className="flex items-start gap-4">
-        {/* Friend Photo */}
+       
         <img
           src={friendPhoto || DEFAULT_AVATAR}
           alt={friendName}
@@ -120,14 +120,14 @@ export default function ActivityCard({
           }}
         />
 
-        {/* Activity Content */}
+       
         <div className="flex-1 min-w-0">
-          {/* Friend Name - FULL NAME (not clickable separately, whole card is clickable) */}
+         
           <h3 className="text-white font-bold text-lg mb-1.5 group-hover:text-red-400 transition-colors">
             {friendName}
           </h3>
 
-          {/* Activity Text with clickable opponent first name for challenges */}
+        
           <p className="text-zinc-300 text-base mb-3 leading-relaxed">
             <span className="mr-2 text-lg">{getEmoji()}</span>
             {renderActivityText()}

@@ -23,7 +23,7 @@ interface Activity {
   timestamp: Date;
 }
 
-// Helper: Calculate "X minutes ago"
+
 const getTimeAgo = (timestamp: Date): string => {
   const now = new Date();
   const diffMs = now.getTime() - new Date(timestamp).getTime();
@@ -38,7 +38,7 @@ const getTimeAgo = (timestamp: Date): string => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-// Helper: Check if date is today
+
 const isToday = (date: Date): boolean => {
   const today = new Date();
   const checkDate = new Date(date);
@@ -49,19 +49,19 @@ const isToday = (date: Date): boolean => {
   );
 };
 
-// Helper: Check if streak is a milestone
+
 const checkStreakMilestone = (streakCount: number): boolean => {
   const milestones = [5, 10, 15, 20, 25, 30, 50, 75, 100];
   return milestones.includes(streakCount);
 };
 
-// Main Feed Controller
+
 export const getFeed = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const activities: Activity[] = [];
 
-    // Get user and their friends
+   
     const user = await User.findOne({ clerkUserId: userId });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -73,15 +73,15 @@ export const getFeed = async (req: Request, res: Response) => {
       return res.json({ activities: [] });
     }
 
-    // Get friends data for metadata
+    
     const friends = await User.find({ clerkUserId: { $in: friendIds } });
     const friendMap = new Map(friends.map(f => [f.clerkUserId, f]));
 
-    // Calculate date range (last 7 days)
+   
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // 1. HABIT COMPLETIONS (TODAY ONLY)
+    
     const habits = await Habit.find({
       userId: { $in: friendIds },
       lastCompleted: { $exists: true }
@@ -91,7 +91,7 @@ export const getFeed = async (req: Request, res: Response) => {
       if (habit.lastCompleted && isToday(habit.lastCompleted)) {
         const friend = friendMap.get(habit.userId);
         if (friend) {
-          // Regular habit completion
+         
           activities.push({
             friendId: friend.clerkUserId,
             friendName: friend.fullName || friend.username,
@@ -105,7 +105,7 @@ export const getFeed = async (req: Request, res: Response) => {
             timestamp: habit.lastCompleted
           });
 
-          // Check if this completion hit a streak milestone
+          
           if (habit.streak && checkStreakMilestone(habit.streak)) {
             activities.push({
               friendId: friend.clerkUserId,
@@ -124,7 +124,7 @@ export const getFeed = async (req: Request, res: Response) => {
       }
     });
 
-    // 2. CHALLENGE ACTIVITY (last 7 days, accepted/approved/failed only)
+    
     const challenges = await Challenge.find({
       $or: [
         { challengerId: { $in: friendIds } },
@@ -135,17 +135,17 @@ export const getFeed = async (req: Request, res: Response) => {
     });
 
     challenges.forEach(challenge => {
-      // Skip if IDs are missing
+      
       if (!challenge.challengerId || !challenge.opponentId) return;
 
       const challengerFriend = friendMap.get(challenge.challengerId);
       const opponentFriend = friendMap.get(challenge.opponentId);
 
-      // Get names for display
+     
       const challengerName = challengerFriend ? (challengerFriend.fullName || challengerFriend.username) : challenge.challengerName || 'Someone';
       const opponentName = opponentFriend ? (opponentFriend.fullName || opponentFriend.username) : challenge.opponentName || 'Someone';
 
-      // Challenge accepted - show who accepted
+      
       if (challenge.status === 'accepted' && opponentFriend) {
         const challengeTitle = challenge.title ? ` "${challenge.title}"` : '';
         activities.push({
@@ -163,7 +163,7 @@ export const getFeed = async (req: Request, res: Response) => {
         });
       }
 
-      // Challenge approved (won) - show winner vs loser
+      
       if (challenge.status === 'approved' && opponentFriend) {
         const challengeTitle = challenge.title ? ` "${challenge.title}"` : '';
         activities.push({
@@ -182,9 +182,9 @@ export const getFeed = async (req: Request, res: Response) => {
         });
       }
 
-      // Challenge failed - show who failed
+      
       if (challenge.status === 'failed') {
-        // Determine who failed (could be either)
+       
         const failedFriend = opponentFriend || challengerFriend;
         const otherPerson = failedFriend === opponentFriend ? challengerName : opponentName;
         const otherPersonId = failedFriend === opponentFriend ? challenge.challengerId : challenge.opponentId;
@@ -208,7 +208,7 @@ export const getFeed = async (req: Request, res: Response) => {
       }
     });
 
-    // 3. TASK COMPLETIONS (last 7 days, approved only)
+    
     const tasks = await Task.find({
       userId: { $in: friendIds },
       status: 'approved',
@@ -233,16 +233,16 @@ export const getFeed = async (req: Request, res: Response) => {
       }
     });
 
-    // 4. LEVEL UPS (last 7 days, calculate based on recent XP)
+    
     friends.forEach(friend => {
       if (friend.updatedAt && friend.updatedAt >= sevenDaysAgo) {
         const currentLevel = friend.level;
         
-        // Check if they recently leveled up (XP close to level threshold)
+       
         const levelThreshold = Math.pow(currentLevel - 1, 2) * 100;
         const nextLevelThreshold = Math.pow(currentLevel, 2) * 100;
         
-        // If XP is within 100 of current level threshold, they just leveled up
+     
         if (friend.xp >= levelThreshold && friend.xp < levelThreshold + 100 && currentLevel > 1) {
           activities.push({
             friendId: friend.clerkUserId,
@@ -259,7 +259,7 @@ export const getFeed = async (req: Request, res: Response) => {
       }
     });
 
-    // Sort by timestamp (newest first) and limit to 20
+    
     const sortedActivities = activities
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 20)

@@ -62,7 +62,7 @@ export default function Feed() {
     );
   }
 
-  // Error state
+  
   if (error) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -79,12 +79,12 @@ export default function Feed() {
     );
   }
 
-  // Empty state
+  
   if (activities.length === 0) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
         <div className="max-w-7xl mx-auto">
-          {/* HEADER */}
+          
           <section className="mb-12">
             <span className="text-red-500 uppercase tracking-wider text-sm font-semibold">
               Daily Discipline
@@ -99,7 +99,7 @@ export default function Feed() {
             </p>
           </section>
 
-          {/* EMPTY STATE */}
+          
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
             <div className="text-6xl mb-4">👥</div>
             <h2 className="text-2xl font-bold text-white mb-2">
@@ -120,7 +120,7 @@ export default function Feed() {
     );
   }
 
-  // Feed with activities
+ 
   return (
     <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10 pb-24">
       <div className="max-w-7xl mx-auto">
@@ -138,13 +138,13 @@ export default function Feed() {
             See what your circle is doing
           </p>
           
-          {/* Activity count with better styling */}
+          
           <p className="text-zinc-500 text-sm">
             {activities.length} recent {activities.length === 1 ? 'activity' : 'activities'}
           </p>
         </section>
 
-        {/* ACTIVITY FEED with better spacing */}
+        
         <section>
           <div className="space-y-4">
             {activities.map((activity, index) => (

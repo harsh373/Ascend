@@ -60,13 +60,12 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
     window.location.reload();
   };
 
-  // Determine which user to show based on view mode
+  
   const isChallenger = challengerId === userId;
   const displayName = isChallenger ? opponentName : challengerName;
   const displayPhoto = isChallenger ? opponentPhoto : challengerPhoto;
   const displayUserId = isChallenger ? opponentId : challengerId;
 
-  // Navigate to user profile
   const handleProfileClick = () => {
     navigate(`/profile/${displayUserId}`);
   };
@@ -119,7 +118,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
         <p className="text-lg sm:text-xl font-semibold text-white">{title}</p>
       </div>
 
-      {/* XP REWARD */}
+     
       <div className="flex items-center gap-4 mb-4 text-sm sm:text-base text-zinc-400">
         <span className="flex items-center gap-1">
           <span className="text-base sm:text-lg">💰</span>
@@ -127,9 +126,9 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
         </span>
       </div>
 
-      {/* ACTIONS BASED ON VIEW MODE */}
+     
 
-      {/* SENT BY YOU - Show status message */}
+      
       {viewMode === "sent" && status === "pending" && (
         <div className="text-sm text-zinc-500 italic">
           Waiting for {displayName} to respond...
@@ -148,7 +147,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
         </div>
       )}
 
-      {/* RECEIVED - Accept/Reject buttons */}
+      
       {viewMode === "received" && status === "pending" && (
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
@@ -198,7 +197,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
         </div>
       )}
 
-      {/* REVIEW - Approve/Reject with proof */}
+    
       {viewMode === "review" && status === "submitted" && (
         <div className="space-y-3">
           {proof && (
@@ -239,7 +238,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
         </div>
       )}
 
-      {/* COMPLETED - Show result */}
+      
       {viewMode === "completed" && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm">
@@ -250,7 +249,7 @@ export default function ChallengeCard({ challenge, viewMode }: ChallengeCardProp
             )}
           </div>
 
-          {/* Show proof for completed challenges if exists - SMALLER SIZE */}
+         
           {proof && (
             <div className="w-full rounded-lg border border-zinc-700 overflow-hidden bg-zinc-800">
               <img
