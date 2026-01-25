@@ -23,6 +23,7 @@ import UserTasks from "./pages/UserTasks";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import { Analytics } from "@vercel/analytics/react";
 import ScrollToTop from "./components/ScrollToTop";
+import Feed from "./pages/Feed";
 
 ReactGA.initialize(import.meta.env.VITE_GA_ID);
 
@@ -52,6 +53,14 @@ function App() {
               element={
                 <AuthGate>
                   <Home />
+                </AuthGate>
+              }
+            />
+            <Route
+              path="/habits"
+              element={
+                <AuthGate>
+                  <Feed/>
                 </AuthGate>
               }
             />
