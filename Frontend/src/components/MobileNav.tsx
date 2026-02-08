@@ -25,10 +25,10 @@ export default function MobileNav() {
         </div>
 
       
-        <NavLink to="/profile" className="ml-auto">
+        <NavLink to="/settings" className="ml-auto">
           <img
-            src="/assets/profile.svg"
-            alt="Profile"
+            src="/assets/setting.svg"
+            alt="Settings"
             className="w-9 h-9 object-contain filter invert brightness-200"
           />
         </NavLink>
@@ -48,39 +48,41 @@ export default function MobileNav() {
           )}
         </NavLink>
 
+        <NavLink to="/search" className="group">
+          {({ isActive }) => (
+            <img
+              src="/assets/search.svg"
+              className={`${iconClass} ${isActive ? activeClass : ""}`}
+              alt="Search"
+            />
+          )}
+        </NavLink>
+
+
         
-        <NavLink to="/habits" className="group">
+        <NavLink to="/create" className="group">
           {({ isActive }) => (
             <img
               src="/assets/habit.svg"
               className={`${iconClass} ${isActive ? activeClass : ""}`}
-              alt="Habits"
+              alt="Create"
             />
           )}
         </NavLink>
 
        
-        <NavLink to="/challenges" className="group">
+        <NavLink to="/profile" className="group">
           {({ isActive }) => (
             <img
-              src="/assets/challenges.svg"
+              src="/assets/profile.svg"
               className={`${iconClass} ${isActive ? activeClass : ""}`}
-              alt="Challenges"
+              alt="Profile"
             />
           )}
         </NavLink>
 
         
-        <NavLink to="/friends" className="group">
-          {({ isActive }) => (
-            <img
-              src="/assets/friends.svg"
-              className={`${iconClass} ${isActive ? activeClass : ""}`}
-              alt="Friends"
-            />
-          )}
-        </NavLink>
-
+        
       </div>
     </>
   );

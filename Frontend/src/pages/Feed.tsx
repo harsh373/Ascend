@@ -1,161 +1,211 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
-import { getFeed } from "../api/feedApi";
-import ActivityCard from "../components/ActivityCard";
+import { getFeed } from "../api/arcApi";
+import LoadingSkeleton from "../components/LoadingSkelton";
+import ImageLightbox from "../components/ImageLightbox";
+import { getRelativeTime } from "../utils/dateUtils";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
-interface Activity {
-  friendId: string;
-  friendName: string;
-  friendPhoto: string;
-  activityType: 'habit' | 'streak_milestone' | 'challenge' | 'task' | 'level_up';
-  activityText: string;
-  metadata: {
-    habitName?: string;
-    streakCount?: number;
-    xpGained?: number;
-    challengeTitle?: string;
-    level?: number;
-    taskTitle?: string;
-  };
-  timestamp: string;
-  timeAgo: string;
+interface FeedItem {
+  updateId: string;
+  updateType: string;
+  updateText: string;
+  updateImages: string[];
+  updateCreatedAt: string;
+  arcId: string;
+  arcTitle: string;
+  arcTheme: string;
+  arcCoverPhoto: string;
+  arcUserId: string;
+  username: string;
+  profileImage: string;
 }
 
 export default function Feed() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
-  const userId = user?.id;
 
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [expandedUpdates, setExpandedUpdates] = useState<Set<string>>(new Set());
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
-    if (!isLoaded || !userId) return;
+    if (!isLoaded || !user) return;
+
+    const loadFeed = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const res = await getFeed(user.id);
+        setFeedItems(res.data.data);
+      } catch (err: unknown){
+          console.error("Error loading profile:", err);
+          setError(getErrorMessage(err));
+          
+          } 
+          finally {
+        setLoading(false);
+      }
+    };
+
     loadFeed();
-  }, [isLoaded, userId]);
+  }, [isLoaded, user]);
 
-  const loadFeed = async () => {
-    if (!userId) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const res = await getFeed(userId);
-      setActivities(res.data.activities || []);
-    } catch (err) {
-      console.error("Error loading feed:", err);
-      setError("Failed to load feed");
-    } finally {
-      setLoading(false);
-    }
+  const toggleExpanded = (updateId: string) => {
+    setExpandedUpdates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(updateId)) {
+        newSet.delete(updateId);
+      } else {
+        newSet.add(updateId);
+      }
+      return newSet;
+    });
   };
 
-  // Loading state
-  if (!isLoaded || loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">
-        Loading...
-      </div>
-    );
+  const truncateText = (text: string, updateId: string) => {
+    const isExpanded = expandedUpdates.has(updateId);
+    if (text.length <= 200 || isExpanded) return text;
+    return text.substring(0, 200) + "...";
+  };
+
+  const handleCardClick = (arcId: string) => {
+    navigate(`/arc/${arcId}`);
+  };
+
+  const handleProfileClick = (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation();
+    navigate(`/profile/${userId}`);
+  };
+
+  const openLightbox = (e: React.MouseEvent, images: string[], index: number) => {
+    e.stopPropagation();
+    setLightboxImages(images);
+    setLightboxIndex(index);
+  };
+
+  const capitalizeFirst = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  if (loading) {
+    return <LoadingSkeleton />;
   }
 
-  
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={loadFeed}
-            className="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg font-semibold transition"
-          >
-            Try Again
-          </button>
-        </div>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">
+        {error}
       </div>
     );
   }
 
-  
-  if (activities.length === 0) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10">
-        <div className="max-w-7xl mx-auto">
-          
-          <section className="mb-12">
-            <span className="text-red-500 uppercase tracking-wider text-sm font-semibold">
-              Daily Discipline
-            </span>
-
-            <h1 className="text-6xl sm:text-7xl font-black text-red-500 mt-2 mb-4">
-              FEED
-            </h1>
-
-            <p className="text-zinc-400 text-lg max-w-2xl">
-              See what your circle is doing
-            </p>
-          </section>
-
-          
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
-            <div className="text-6xl mb-4">👥</div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              No activity yet
-            </h2>
-            <p className="text-zinc-400 mb-6">
-              Add friends to see their activity in your feed.
-            </p>
-            <button
-              onClick={() => navigate("/friends")}
-              className="bg-red-600 hover:bg-red-500 px-6 py-3 rounded-lg font-semibold transition"
-            >
-              Add Friends
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
- 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 py-10 pb-24">
-      <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
-        <section className="mb-12">
-          <span className="text-red-500 uppercase tracking-wider text-sm font-semibold">
-            Daily Discipline
-          </span>
-
-          <h1 className="text-6xl sm:text-7xl font-black text-red-500 mt-2 mb-4">
+    <div className="min-h-screen bg-zinc-950 text-white pb-24">
+      <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl sm:text-5xl font-black text-white mb-2">
             FEED
           </h1>
-
-          <p className="text-zinc-400 text-lg max-w-2xl mb-2">
-            See what your circle is doing
+          <p className="text-zinc-400 text-lg">
+            {feedItems.length === 0 
+              ? "Follow an Arc to see progress here."
+              : "Witness progress in real-time."
+            }
           </p>
-          
-          
-          <p className="text-zinc-500 text-sm">
-            {activities.length} recent {activities.length === 1 ? 'activity' : 'activities'}
-          </p>
-        </section>
+        </div>
 
-        
-        <section>
-          <div className="space-y-4">
-            {activities.map((activity, index) => (
-              <ActivityCard
-                key={`${activity.friendId}-${activity.timestamp}-${index}`}
-                {...activity}
-              />
+        {feedItems.length === 0 ? (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
+            <div className="text-6xl mb-4">📝</div>
+            <h3 className="text-2xl font-bold text-white mb-2">No updates yet</h3>
+            <p className="text-zinc-400 mb-6">Follow arcs to see their progress here.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {feedItems.map((item) => (
+              <div
+                key={item.updateId}
+                onClick={() => handleCardClick(item.arcId)}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 sm:p-6 hover:border-zinc-700 transition-all duration-200 cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <h2 className="text-2xl sm:text-3xl font-black text-white flex-1 pr-3">
+                    {item.arcTitle}
+                  </h2>
+
+                  <button
+                    onClick={(e) => handleProfileClick(e, item.arcUserId)}
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-zinc-800 bg-zinc-900 overflow-hidden hover:border-red-500 transition shrink-0"
+                  >
+                    {item.profileImage ? (
+                      <img
+                        src={item.profileImage}
+                        alt={item.username}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400">
+                        {item.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </button>
+                </div>
+
+                <p className="text-zinc-200 text-base sm:text-lg mb-4 whitespace-pre-wrap">
+                  {truncateText(item.updateText, item.updateId)}
+                </p>
+
+                {item.updateText.length > 200 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpanded(item.updateId);
+                    }}
+                    className="text-red-500 hover:text-red-400 text-sm font-semibold mb-4"
+                  >
+                    {expandedUpdates.has(item.updateId) ? "Show less" : "Read more"}
+                  </button>
+                )}
+
+                {item.updateImages && item.updateImages.length > 0 && (
+                  <div className={`grid gap-4 mb-4 ${item.updateImages.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    {item.updateImages.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt={`Update image ${idx + 1}`}
+                        className="w-full rounded-lg border border-zinc-700 hover:border-red-500 transition cursor-pointer"
+                        onClick={(e) => openLightbox(e, item.updateImages, idx)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 text-sm text-zinc-500">
+                  <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg font-semibold uppercase">
+                    {capitalizeFirst(item.updateType)}
+                  </span>
+                  <span>•</span>
+                  <span>{getRelativeTime(item.updateCreatedAt)}</span>
+                </div>
+              </div>
             ))}
           </div>
-        </section>
+        )}
       </div>
+
+      {lightboxImages.length > 0 && (
+        <ImageLightbox
+          images={lightboxImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxImages([])}
+        />
+      )}
     </div>
   );
 }

@@ -13,7 +13,8 @@ import approvalRoutes from "./routes/approvalRoutes"
 import habitRoutes from "./routes/habitRoutes"
 import challengeRoutes from "./routes/challengeRoutes"
 import profileRoutes from "./routes/profileRoutes"
-import feedRoutes from "./routes/feedRoutes"
+import feedRoutes from "./routes/arcRoutes"
+import arcRoutes from "./routes/arcRoutes"
 
 
 
@@ -52,6 +53,7 @@ app.use("/api/habits", habitRoutes)
 app.use("/api/challenges", challengeRoutes)
 app.use("/api/profile", profileRoutes)
 app.use("/api/feed",feedRoutes)
+app.use("/api/arcs",arcRoutes)
 
 export default app;
 
