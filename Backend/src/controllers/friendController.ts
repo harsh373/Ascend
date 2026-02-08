@@ -11,7 +11,10 @@ export const searchUsers = async (req: Request, res: Response) => {
     }
 
     const users = await User.find({
-      username: { $regex: query, $options: "i" },
+      $or: [
+        { username: { $regex: `^${query}`, $options: "i" } },
+        { fullName: { $regex: `^${query}`, $options: "i" } }
+      ]
     }).select("username clerkUserId fullName profileImage level xp");
 
     res.json(users);

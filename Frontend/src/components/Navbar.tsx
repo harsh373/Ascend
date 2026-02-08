@@ -35,30 +35,21 @@ export default function Navbar() {
         </NavLink>
 
         <NavLink
-          to="/habits"
+          to="/search"
           className={({ isActive }) =>
             isActive ? `${baseLink} ${activeLink}` : baseLink
           }
         >
-          Habits
+          Search
         </NavLink>
 
         <NavLink
-          to="/challenges"
+          to="/create"
           className={({ isActive }) =>
             isActive ? `${baseLink} ${activeLink}` : baseLink
           }
         >
-          Challenges
-        </NavLink>
-
-        <NavLink
-          to="/friends"
-          className={({ isActive }) =>
-            isActive ? `${baseLink} ${activeLink}` : baseLink
-          }
-        >
-          Friends
+          Create
         </NavLink>
 
         <NavLink
@@ -68,6 +59,15 @@ export default function Navbar() {
           }
         >
           Profile
+        </NavLink>
+
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            isActive ? `${baseLink} ${activeLink}` : baseLink
+          }
+        >
+          Settings
         </NavLink>
       </div>
 

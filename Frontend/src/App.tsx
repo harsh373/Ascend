@@ -5,26 +5,34 @@ import Navbar from "./components/Navbar";
 import MobileNav from "./components/MobileNav";
 import { Route, Routes } from "react-router-dom";
 
-import Friends from "./pages/Friends";
+
 import Profile from "./pages/Profile";
 import Footer from "./components/Footer";
-import Approvals from "./pages/Approvals";
+
 import Onboarding from "./pages/Onboarding";
-import Challenges from "./pages/Challenges";
-import AllTasks from "./pages/AllTasks";
+
+
 import LandingPage from "./pages/LandingPage";
+
+
 import ReactGA from "react-ga4";
 
+
 import AuthGate from "./components/AuthGate";
-import ManageHabits from "./pages/ManageHabits";
-import ChallengeHistory from "./pages/ChallengeHistory";
-import UserChallenges from "./pages/UserChallenges";
-import UserTasks from "./pages/UserTasks";
+
+
+
+
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import { Analytics } from "@vercel/analytics/react";
 import ScrollToTop from "./components/ScrollToTop";
 import Feed from "./pages/Feed";
-import Habits from "./pages/Habits";
+
+import ArcPage from "./pages/ArcPage";
+import CreateArc from "./pages/CreateArc";
+import Search from "./pages/Search";
+import Create from "./pages/Create";
+import Settings from "./pages/Settings";
 
 ReactGA.initialize(import.meta.env.VITE_GA_ID);
 
@@ -58,30 +66,23 @@ function App() {
                 </AuthGate>
               }
             />
-            <Route
-              path="/habits"
-              element={
-                <AuthGate>
-                    <Habits/>
-                </AuthGate>
-              }
-            />
-
-            
-            <Route path="/friends" element={<Friends />} />
+              
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
-            <Route path="/profile/:userId/tasks" element={<UserTasks />} />
-            <Route path="/profile/:userId/challenges" element={<UserChallenges />} />
-            <Route path="/approvals" element={<Approvals />} />
+            
+            
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/manage-habits" element={<ManageHabits />} />
-            <Route path="/challenges/history" element={<ChallengeHistory />} />
+            
+            
+            <Route path="/create-arc" element={<CreateArc />} />
+            <Route path="/arc/:arcId" element={<ArcPage />} />
+            <Route path="/search" element ={<Search/>}/>
+            <Route path="/create" element={<Create />} />
+            <Route path="/settings" element={<Settings />} />
        
      
 
-            <Route path="/challenges" element={<Challenges />} />
-            <Route path="/tasks" element={<AllTasks />} />
+            
           </Routes>
         </main>
         
