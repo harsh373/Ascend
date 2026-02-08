@@ -20,6 +20,7 @@ import feedRoutes from "./routes/feedRoutes"
 const app = express();
 
 app.use(cors());
+
 app.use(express.json());
 
 let isConnected = false;

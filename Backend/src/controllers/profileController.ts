@@ -20,6 +20,8 @@ export const getPublicProfile = async (req: AuthenticatedRequest, res: Response)
 
     
 
+    
+
   
     const user = await User.findOne({ clerkUserId: userId });
     if (!user) {

@@ -47,4 +47,3 @@ export const voteTask = async (req: Request, res: Response) => {
   await task.save();
   res.json({ message: "Vote recorded", task });
 };
-

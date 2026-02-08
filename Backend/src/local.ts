@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 5000;
       console.log(` Local server running at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error(" Failed to start local server:", error);
+    console.error(" Failed to start local server to make :", error);
     process.exit(1);
   }
 })();

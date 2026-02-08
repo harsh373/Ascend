@@ -17,5 +17,4 @@ router.get("/:userId", getUserProfile);
 router.post("/upload-avatar", upload.single("image"), uploadAvatar);
 router.post("/onboarded", markUserOnboarded);
 
-
 export default router;

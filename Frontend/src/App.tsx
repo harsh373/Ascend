@@ -13,11 +13,15 @@ import Onboarding from "./pages/Onboarding";
 import Challenges from "./pages/Challenges";
 import AllTasks from "./pages/AllTasks";
 import LandingPage from "./pages/LandingPage";
+
+
 import ReactGA from "react-ga4";
+
 
 import AuthGate from "./components/AuthGate";
 import ManageHabits from "./pages/ManageHabits";
 import ChallengeHistory from "./pages/ChallengeHistory";
+
 import UserChallenges from "./pages/UserChallenges";
 import UserTasks from "./pages/UserTasks";
 import AnalyticsTracker from "./components/AnalyticsTracker";
