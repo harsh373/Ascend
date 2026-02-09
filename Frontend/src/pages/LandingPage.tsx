@@ -20,7 +20,7 @@ export default function LandingPage() {
 
           <p className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto">
             Create arcs. Track progress. Build proof.<br/>
-            Your journey, documented.
+           And Make Your Journey Documented
           </p>
 
           <div className="pt-6">
