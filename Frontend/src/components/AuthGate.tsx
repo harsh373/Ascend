@@ -1,41 +1,48 @@
 import { useEffect, useState, type JSX } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { getUserProfile } from "../api/userApi";
-import { useNavigate } from "react-router-dom";
+import { getUserProfile, createUser } from "../api/userApi";
 
 export default function AuthGate({ children }: { children: JSX.Element }) {
-  const { user } = useUser();
-  const navigate = useNavigate();
+  const { user, isLoaded } = useUser();
   const [ready, setReady] = useState(false);
 
-   useEffect(() => {
-  const check = async () => {
-    if (!user) return;
+  useEffect(() => {
+    const check = async () => {
+      if (!isLoaded || !user) return;
 
-    try {
-      const res = await getUserProfile(user.id);
-
-      console.log("AUTHGATE RESPONSE:", res.data);
-
-      if (!res.data.onboarded) {
-        console.log("REDIRECTING TO ONBOARDING");
-        navigate("/onboarding", { replace: true });
-        return;
+      try {
+        await getUserProfile(user.id);
+        setReady(true);
+      } catch {
+        console.log("User not in DB, creating...");
+        
+        const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+        const username = user.username || user.emailAddresses[0]?.emailAddress.split("@")[0] || user.id.slice(0, 8);
+        
+        await createUser(
+          user.id,
+          username,
+          fullName || username,
+          user.imageUrl || ""
+        );
+        
+        setReady(true);
       }
+    };
 
-      console.log("ALLOWING HOME");
-      setReady(true);
-    } catch (err) {
-      console.error("AUTHGATE ERROR:", err);
-      navigate("/onboarding", { replace: true });
-    }
-  };
+    check();
+  }, [isLoaded, user]);
 
-  check();
-}, [user, navigate]);
-
-
-  if (!ready) return null;
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return children;
 }

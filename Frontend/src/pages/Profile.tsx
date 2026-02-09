@@ -243,7 +243,7 @@ export default function Profile() {
                       className="h-40 bg-cover bg-center relative"
                       style={{ backgroundImage: `url(${arc.coverPhoto})` }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/60 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-zinc-900 via-zinc-900/60 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h3 className="text-xl font-black text-white">
                           {arc.title}

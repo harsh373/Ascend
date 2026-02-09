@@ -48,7 +48,6 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getFriendRequests = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -70,7 +69,6 @@ export const getFriendRequests = async (req: Request, res: Response) => {
   }
 };
 
-// Get user profile
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -91,6 +89,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
       .select("title status xp");
 
     res.json({
+      clerkUserId: user.clerkUserId,
       username: user.username,
       fullName: user.fullName,
       profileImage: user.profileImage,
@@ -114,7 +113,6 @@ export const getUserProfile = async (req: Request, res: Response) => {
   }
 };
 
-// Get user friends
 export const getUserFriends = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -146,8 +144,6 @@ export const getUserFriends = async (req: Request, res: Response) => {
   }
 };
 
-//for uploading of images
-
 export const uploadAvatar = async (req: any, res: Response) => {
   try {
     const { userId } = req.body;
@@ -169,8 +165,6 @@ export const uploadAvatar = async (req: any, res: Response) => {
     res.status(500).json({ message: "Upload failed" });
   }
 };
-
-//for onobarding and taking habit at first only
 
 export const markUserOnboarded = async (req: Request, res: Response) => {
   try {

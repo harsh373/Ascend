@@ -9,7 +9,6 @@ import { Route, Routes } from "react-router-dom";
 import Profile from "./pages/Profile";
 import Footer from "./components/Footer";
 
-import Onboarding from "./pages/Onboarding";
 
 
 import LandingPage from "./pages/LandingPage";
@@ -71,7 +70,7 @@ function App() {
             <Route path="/profile/:userId" element={<Profile />} />
             
             
-            <Route path="/onboarding" element={<Onboarding />} />
+            
             
             
             <Route path="/create-arc" element={<CreateArc />} />
