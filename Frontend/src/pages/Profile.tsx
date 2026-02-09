@@ -12,7 +12,7 @@ import { getErrorMessage } from "../utils/getErrorMessage";
 interface UserProfile {
   clerkUserId: string;
   username: string;
-  fullName: string;
+  fullName?: string;
   profileImage: string;
 }
 
@@ -128,6 +128,8 @@ export default function Profile() {
     );
   }
 
+  const displayName = profile.fullName || profile.username;
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
       <div className="bg-zinc-900 lg:bg-zinc-950">
@@ -139,12 +141,12 @@ export default function Profile() {
                   {profile.profileImage ? (
                     <img
                       src={profile.profileImage}
-                      alt={profile.username}
+                      alt={displayName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-400">
-                      {profile.username.charAt(0).toUpperCase()}
+                      {displayName.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
@@ -166,26 +168,36 @@ export default function Profile() {
               </div>
 
               <div className="flex-1">
-                <h1 className="text-xl font-semibold text-white">
-                  {profile.username}
+                <h1 className="text-2xl font-bold text-white mb-1">
+                  {displayName}
                 </h1>
+                {profile.fullName && profile.fullName !== profile.username && (
+                  <p className="text-zinc-400 text-sm">@{profile.username}</p>
+                )}
               </div>
             </div>
 
-            <div className="text-center py-3 border-t border-zinc-800">
-              <div className="text-zinc-400 text-sm">
-                <span className="font-semibold text-white">{arcs.length}</span> Arcs
-                <span className="mx-2">•</span>
+            <div className="flex items-center justify-center gap-6 py-4 border-t border-zinc-800">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-white">{arcs.length}</p>
+                <p className="text-zinc-400 text-sm">Arcs</p>
+              </div>
+              
+              <div className="h-8 w-px bg-zinc-800" />
+              
+              <div className="text-center">
                 {followedArcs.length > 0 ? (
                   <button
                     onClick={() => setShowFollowedModal(true)}
-                    className="hover:text-white transition"
+                    className="hover:opacity-80 transition"
                   >
-                    Following <span className="font-semibold text-white">{followedArcs.length}</span> Arcs
+                    <p className="text-2xl font-bold text-white">{followedArcs.length}</p>
+                    <p className="text-red-400 text-sm font-semibold">Following</p>
                   </button>
                 ) : (
                   <>
-                    Following <span className="font-semibold text-white">{followedArcs.length}</span> Arcs
+                    <p className="text-2xl font-bold text-white">{followedArcs.length}</p>
+                    <p className="text-zinc-400 text-sm">Following</p>
                   </>
                 )}
               </div>
@@ -196,14 +208,16 @@ export default function Profile() {
 
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="lg:max-w-3xl lg:mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6">My Arcs</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6">
+            {isOwnProfile ? "My Arcs" : `${displayName}'s Arcs`}
+          </h2>
 
           {arcs.length === 0 ? (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
               <div className="text-6xl mb-4">🎯</div>
               <h3 className="text-2xl font-bold text-white mb-2">No arcs yet</h3>
               <p className="text-zinc-400 mb-6">
-                Create your first arc to start your journey
+                {isOwnProfile ? "Create your first arc to start your journey" : "This user hasn't created any arcs yet"}
               </p>
               {isOwnProfile && (
                 <button
@@ -226,10 +240,11 @@ export default function Profile() {
                     onClick={() => navigate(`/arc/${arc._id}`)}
                   >
                     <div
-                      className="h-40 bg-cover bg-center"
+                      className="h-40 bg-cover bg-center relative"
                       style={{ backgroundImage: `url(${arc.coverPhoto})` }}
                     >
-                      <div className="h-full bg-linear-to-t from-zinc-900 via-zinc-900/60 to-transparent flex items-end p-4">
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/60 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h3 className="text-xl font-black text-white">
                           {arc.title}
                         </h3>
