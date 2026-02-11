@@ -5,7 +5,7 @@ export default function Login() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4">
       <h1 className="text-3xl font-extrabold text-white mb-2">ASCEND</h1>
       <p className="text-zinc-400 mb-6 text-center max-w-xs">
-        Compete with friends. Build discipline. Level up.
+        Create your Arcs and show your journey.
       </p>
 
       <SignUp
