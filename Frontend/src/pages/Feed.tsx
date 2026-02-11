@@ -176,13 +176,17 @@ export default function Feed() {
                 {item.updateImages && item.updateImages.length > 0 && (
                   <div className={`grid gap-4 mb-4 ${item.updateImages.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {item.updateImages.map((img, idx) => (
-                      <img
+                      <div
                         key={idx}
-                        src={img}
-                        alt={`Update image ${idx + 1}`}
-                        className="w-full rounded-lg border border-zinc-700 hover:border-red-500 transition cursor-pointer"
+                        className="relative w-full aspect-video overflow-hidden rounded-lg border border-zinc-700 hover:border-red-500 transition cursor-pointer"
                         onClick={(e) => openLightbox(e, item.updateImages, idx)}
-                      />
+                      >
+                        <img
+                          src={img}
+                          alt={`Update image ${idx + 1}`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -200,7 +204,7 @@ export default function Feed() {
         )}
       </div>
 
-  
+    
       {user && <FloatingActionButton userId={user.id} />}
 
       {lightboxImages.length > 0 && (

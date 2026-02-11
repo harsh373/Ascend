@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { getArcById, followArc, unfollowArc, archiveArc, unarchiveArc } from "../api/arcApi";
+import { getUserProfile } from "../api/userApi";
 import AddArcUpdate from "../components/AddArcUpdate";
 import ImageLightbox from "../components/ImageLightbox";
 import LoadingSkeleton from "../components/LoadingSkelton";
@@ -31,8 +32,10 @@ interface Arc {
 export default function ArcPage() {
   const { arcId } = useParams();
   const { user } = useUser();
+  const navigate = useNavigate();
 
   const [arc, setArc] = useState<Arc | null>(null);
+  const [arcOwnerProfile, setArcOwnerProfile] = useState<{ username: string; profileImage: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddUpdate, setShowAddUpdate] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
@@ -45,7 +48,21 @@ export default function ArcPage() {
       try {
         setLoading(true);
         const res = await getArcById(arcId);
-        setArc(res.data.data);
+        const arcData = res.data.data;
+        setArc(arcData);
+
+        
+        if (arcData.userId) {
+          try {
+            const profileRes = await getUserProfile(arcData.userId);
+            setArcOwnerProfile({
+              username: profileRes.data.username,
+              profileImage: profileRes.data.profileImage
+            });
+          } catch (err) {
+            console.error("Error loading arc owner profile:", err);
+          }
+        }
       } catch (error) {
         console.error("Error loading arc:", error);
       } finally {
@@ -61,7 +78,21 @@ export default function ArcPage() {
     try {
       setLoading(true);
       const res = await getArcById(arcId);
-      setArc(res.data.data);
+      const arcData = res.data.data;
+      setArc(arcData);
+
+    
+      if (arcData.userId) {
+        try {
+          const profileRes = await getUserProfile(arcData.userId);
+          setArcOwnerProfile({
+            username: profileRes.data.username,
+            profileImage: profileRes.data.profileImage
+          });
+        } catch (err) {
+          console.error("Error loading arc owner profile:", err);
+        }
+      }
     } catch (error) {
       console.error("Error loading arc:", error);
     } finally {
@@ -127,6 +158,12 @@ export default function ArcPage() {
     setLightboxIndex(index);
   };
 
+  const handleProfileClick = () => {
+    if (arc?.userId) {
+      navigate(`/profile/${arc.userId}`);
+    }
+  };
+
   const getUpdateColor = (type: string) => {
     switch (type) {
       case "milestone": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
@@ -176,10 +213,30 @@ export default function ArcPage() {
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto flex items-end justify-between gap-4">
             <h1 className="text-4xl sm:text-6xl font-black text-white drop-shadow-lg">
               {arc.title}
             </h1>
+
+            
+            {arcOwnerProfile && (
+              <button
+                onClick={handleProfileClick}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-zinc-950 bg-zinc-900 overflow-hidden hover:border-red-500 transition shrink-0 shadow-lg"
+              >
+                {arcOwnerProfile.profileImage ? (
+                  <img
+                    src={arcOwnerProfile.profileImage}
+                    alt={arcOwnerProfile.username || "User"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-zinc-400">
+                    {arcOwnerProfile.username?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -279,13 +336,17 @@ export default function ArcPage() {
                   {update.images && update.images.length > 0 && (
                     <div className={`grid gap-4 ${update.images.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                       {update.images.map((img, idx) => (
-                        <img
+                        <div
                           key={idx}
-                          src={img}
-                          alt={`Update image ${idx + 1}`}
+                          className="relative w-full aspect-video overflow-hidden rounded-lg border border-zinc-700 hover:border-red-500 transition cursor-pointer"
                           onClick={() => openLightbox(update.images, idx)}
-                          className="w-full rounded-lg border border-zinc-700 cursor-pointer hover:border-red-500 transition"
-                        />
+                        >
+                          <img
+                            src={img}
+                            alt={`Update image ${idx + 1}`}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        </div>
                       ))}
                     </div>
                   )}

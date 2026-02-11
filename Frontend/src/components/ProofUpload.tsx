@@ -24,6 +24,7 @@ export default function ProofUpload({ challengeId }: { challengeId: string }) {
 
       // Refresh UI so status updates
       window.location.reload();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Upload failed:", err);
       setError("Upload failed. Check server logs.");
