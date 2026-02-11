@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getFeed } from "../api/arcApi";
 import LoadingSkeleton from "../components/LoadingSkelton";
 import ImageLightbox from "../components/ImageLightbox";
+import FloatingActionButton from "../components/FloatingActionButton";
 import { getRelativeTime } from "../utils/dateUtils";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
@@ -105,7 +106,7 @@ export default function Feed() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-24">
+    <div className="min-h-screen bg-zinc-950 text-white pb-24 relative">
       <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-2">
@@ -198,6 +199,9 @@ export default function Feed() {
           </div>
         )}
       </div>
+
+  
+      {user && <FloatingActionButton userId={user.id} />}
 
       {lightboxImages.length > 0 && (
         <ImageLightbox
