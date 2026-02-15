@@ -1,12 +1,28 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
-import { getFeed } from "../api/arcApi";
+import { 
+  getFeed, 
+  likeUpdate, 
+  unlikeUpdate, 
+  addComment 
+} from "../api/arcApi";
 import LoadingSkeleton from "../components/LoadingSkelton";
 import ImageLightbox from "../components/ImageLightbox";
 import FloatingActionButton from "../components/FloatingActionButton";
+import InteractionButtons from "../components/InteractionButtons";
+import CommentPanel from "../components/CommentPanel";
 import { getRelativeTime } from "../utils/dateUtils";
 import { getErrorMessage } from "../utils/getErrorMessage";
+
+interface Comment {
+  _id?: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  text: string;
+  createdAt: string;
+}
 
 interface FeedItem {
   updateId: string;
@@ -14,6 +30,8 @@ interface FeedItem {
   updateText: string;
   updateImages: string[];
   updateCreatedAt: string;
+  updateLikes: string[];
+  updateComments: Comment[];
   arcId: string;
   arcTitle: string;
   arcTheme: string;
@@ -33,6 +51,9 @@ export default function Feed() {
   const [expandedUpdates, setExpandedUpdates] = useState<Set<string>>(new Set());
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [commentPanelOpen, setCommentPanelOpen] = useState(false);
+  const [activeUpdateId, setActiveUpdateId] = useState<string | null>(null);
+  const [activeArcId, setActiveArcId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -43,18 +64,89 @@ export default function Feed() {
         setError("");
         const res = await getFeed(user.id);
         setFeedItems(res.data.data);
-      } catch (err: unknown){
-          console.error("Error loading profile:", err);
-          setError(getErrorMessage(err));
-          
-          } 
-          finally {
+      } catch (err: unknown) {
+        console.error("Error loading feed:", err);
+        setError(getErrorMessage(err));
+      } finally {
         setLoading(false);
       }
     };
 
     loadFeed();
   }, [isLoaded, user]);
+
+  const handleLikeToggle = async (arcId: string, updateId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+
+    const item = feedItems.find(i => i.updateId === updateId);
+    if (!item) return;
+
+    const isLiked = item.updateLikes.includes(user.id);
+
+    setFeedItems(prev =>
+      prev.map(i =>
+        i.updateId === updateId
+          ? {
+              ...i,
+              updateLikes: isLiked
+                ? i.updateLikes.filter(id => id !== user.id)
+                : [...i.updateLikes, user.id]
+            }
+          : i
+      )
+    );
+
+    try {
+      if (isLiked) {
+        await unlikeUpdate(arcId, updateId, user.id);
+      } else {
+        await likeUpdate(arcId, updateId, user.id);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      setFeedItems(prev =>
+        prev.map(i =>
+          i.updateId === updateId
+            ? {
+                ...i,
+                updateLikes: isLiked
+                  ? [...i.updateLikes, user.id]
+                  : i.updateLikes.filter(id => id !== user.id)
+              }
+            : i
+        )
+      );
+    }
+  };
+
+  const handleReplyClick = (arcId: string, updateId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveArcId(arcId);
+    setActiveUpdateId(updateId);
+    setCommentPanelOpen(true);
+  };
+
+  const handleCommentSubmit = async (text: string) => {
+    if (!user || !activeArcId || !activeUpdateId) return;
+
+    const userName = user.fullName || user.username || "Anonymous";
+    const userAvatar = user.imageUrl || "";
+
+    try {
+      await addComment(activeArcId, activeUpdateId, {
+        userId: user.id,
+        userName,
+        userAvatar,
+        text
+      });
+
+      const res = await getFeed(user.id);
+      setFeedItems(res.data.data);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
 
   const toggleExpanded = (updateId: string) => {
     setExpandedUpdates(prev => {
@@ -104,6 +196,8 @@ export default function Feed() {
       </div>
     );
   }
+
+  const activeItem = feedItems.find(i => i.updateId === activeUpdateId);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24 relative">
@@ -191,12 +285,21 @@ export default function Feed() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 text-sm text-zinc-500">
+                <div className="flex items-center gap-3 text-sm text-zinc-500 mb-3">
                   <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg font-semibold uppercase">
                     {capitalizeFirst(item.updateType)}
                   </span>
                   <span>•</span>
                   <span>{getRelativeTime(item.updateCreatedAt)}</span>
+                </div>
+
+                <div onClick={(e) => e.stopPropagation()}>
+                  <InteractionButtons
+                    updateId={item.updateId}
+                    isLiked={item.updateLikes.includes(user?.id || "")}
+                    onLike={(e) => handleLikeToggle(item.arcId, item.updateId, e)}
+                    onReply={(e) => handleReplyClick(item.arcId, item.updateId, e)}
+                  />
                 </div>
               </div>
             ))}
@@ -204,7 +307,6 @@ export default function Feed() {
         )}
       </div>
 
-    
       {user && <FloatingActionButton userId={user.id} />}
 
       {lightboxImages.length > 0 && (
@@ -214,6 +316,13 @@ export default function Feed() {
           onClose={() => setLightboxImages([])}
         />
       )}
+
+      <CommentPanel
+        isOpen={commentPanelOpen}
+        comments={activeItem?.updateComments || []}
+        onClose={() => setCommentPanelOpen(false)}
+        onSubmit={handleCommentSubmit}
+      />
     </div>
   );
 }

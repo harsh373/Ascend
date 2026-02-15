@@ -1,18 +1,40 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { getArcById, followArc, unfollowArc, archiveArc, unarchiveArc } from "../api/arcApi";
+import { 
+  getArcById, 
+  followArc, 
+  unfollowArc, 
+  archiveArc, 
+  unarchiveArc,
+  likeUpdate,
+  unlikeUpdate,
+  addComment
+} from "../api/arcApi";
 import { getUserProfile } from "../api/userApi";
 import AddArcUpdate from "../components/AddArcUpdate";
 import ImageLightbox from "../components/ImageLightbox";
 import LoadingSkeleton from "../components/LoadingSkelton";
+import InteractionButtons from "../components/InteractionButtons";
+import CommentPanel from "../components/CommentPanel";
 import { getRelativeTime } from "../utils/dateUtils";
+
+interface Comment {
+  _id?: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  text: string;
+  createdAt: string;
+}
 
 interface ArcUpdate {
   _id: string;
   type: string;
   text: string;
   images: string[];
+  likes: string[];
+  comments: Comment[];
   createdAt: string;
 }
 
@@ -41,6 +63,8 @@ export default function ArcPage() {
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [expandedUpdates, setExpandedUpdates] = useState<Set<string>>(new Set());
+  const [commentPanelOpen, setCommentPanelOpen] = useState(false);
+  const [activeUpdateId, setActiveUpdateId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadArc = async () => {
@@ -51,7 +75,6 @@ export default function ArcPage() {
         const arcData = res.data.data;
         setArc(arcData);
 
-        
         if (arcData.userId) {
           try {
             const profileRes = await getUserProfile(arcData.userId);
@@ -81,7 +104,6 @@ export default function ArcPage() {
       const arcData = res.data.data;
       setArc(arcData);
 
-    
       if (arcData.userId) {
         try {
           const profileRes = await getUserProfile(arcData.userId);
@@ -97,6 +119,85 @@ export default function ArcPage() {
       console.error("Error loading arc:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLikeToggle = async (updateId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!arc || !user) return;
+
+    const update = arc.updates.find(u => u._id === updateId);
+    if (!update) return;
+
+    const isLiked = update.likes.includes(user.id);
+
+    setArc(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        updates: prev.updates.map(u =>
+          u._id === updateId
+            ? {
+                ...u,
+                likes: isLiked
+                  ? u.likes.filter(id => id !== user.id)
+                  : [...u.likes, user.id]
+              }
+            : u
+        )
+      };
+    });
+
+    try {
+      if (isLiked) {
+        await unlikeUpdate(arc._id, updateId, user.id);
+      } else {
+        await likeUpdate(arc._id, updateId, user.id);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      setArc(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          updates: prev.updates.map(u =>
+            u._id === updateId
+              ? {
+                  ...u,
+                  likes: isLiked
+                    ? [...u.likes, user.id]
+                    : u.likes.filter(id => id !== user.id)
+                }
+              : u
+          )
+        };
+      });
+    }
+  };
+
+  const handleReplyClick = (updateId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setActiveUpdateId(updateId);
+    setCommentPanelOpen(true);
+  };
+
+  const handleCommentSubmit = async (text: string) => {
+    if (!arc || !user || !activeUpdateId) return;
+
+    const userName = user.fullName || user.username || "Anonymous";
+    const userAvatar = user.imageUrl || "";
+
+    try {
+      await addComment(arc._id, activeUpdateId, {
+        userId: user.id,
+        userName,
+        userAvatar,
+        text
+      });
+
+      loadArc();
+    } catch (error) {
+      console.error("Error adding comment:", error);
     }
   };
 
@@ -192,6 +293,8 @@ export default function ArcPage() {
     return text.substring(0, 200) + "...";
   };
 
+  const activeUpdate = arc.updates.find(u => u._id === activeUpdateId);
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
       <div
@@ -218,7 +321,6 @@ export default function ArcPage() {
               {arc.title}
             </h1>
 
-            
             {arcOwnerProfile && (
               <button
                 onClick={handleProfileClick}
@@ -334,7 +436,7 @@ export default function ArcPage() {
                   )}
 
                   {update.images && update.images.length > 0 && (
-                    <div className={`grid gap-4 ${update.images.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className={`grid gap-4 mb-4 ${update.images.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                       {update.images.map((img, idx) => (
                         <div
                           key={idx}
@@ -350,6 +452,13 @@ export default function ArcPage() {
                       ))}
                     </div>
                   )}
+
+                  <InteractionButtons
+                    updateId={update._id}
+                    isLiked={update.likes.includes(user?.id || "")}
+                    onLike={(e) => handleLikeToggle(update._id, e)}
+                    onReply={(e) => handleReplyClick(update._id, e)}
+                  />
                 </div>
               ))}
             </div>
@@ -375,6 +484,13 @@ export default function ArcPage() {
           onClose={() => setLightboxImages([])}
         />
       )}
+
+      <CommentPanel
+        isOpen={commentPanelOpen}
+        comments={activeUpdate?.comments || []}
+        onClose={() => setCommentPanelOpen(false)}
+        onSubmit={handleCommentSubmit}
+      />
     </div>
   );
 }

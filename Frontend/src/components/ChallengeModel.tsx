@@ -42,6 +42,7 @@ export default function ChallengeModal({
       });
 
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Challenge failed", err);
       setError(err.response?.data?.error || "Failed to create challenge");

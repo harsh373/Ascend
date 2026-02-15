@@ -2,12 +2,10 @@ import mongoose from "mongoose";
 
 const arcSchema = new mongoose.Schema({
   userId: { type: String, required: true },
-  
   title: { type: String, required: true },
   theme: { type: String, required: true },
   coverPhoto: { type: String, required: true },
   archived: { type: Boolean, default: false },
-
   updates: [
     {
       type: {
@@ -20,19 +18,29 @@ const arcSchema = new mongoose.Schema({
         type: [String],
         default: []
       },
+      likes: {
+        type: [String],
+        default: []
+      },
+      comments: [
+        {
+          userId: { type: String, required: true },
+          userName: { type: String, required: true },
+          userAvatar: { type: String, default: "" },
+          text: { type: String, required: true },
+          createdAt: { type: Date, default: Date.now }
+        }
+      ],
       createdAt: { type: Date, default: Date.now }
     }
   ],
-
   followers: [
     {
       userId: { type: String, required: true },
       createdAt: { type: Date, default: Date.now }
     }
   ],
-
   lastUpdatedAt: { type: Date, default: Date.now }
-  
 }, { timestamps: true });
 
 arcSchema.index({ userId: 1 });

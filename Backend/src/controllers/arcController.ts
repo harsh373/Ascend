@@ -100,6 +100,8 @@ export const addArcUpdate = async (req: Request, res: Response) => {
       type,
       text,
       images: images || [],
+      likes: [],
+      comments: [],
       createdAt: new Date()
     } as any);
 
@@ -144,6 +146,8 @@ export const uploadArcUpdateImages = async (req: Request, res: Response) => {
       type,
       text,
       images: imagePaths,
+      likes: [],
+      comments: [],
       createdAt: new Date()
     } as any);
 
@@ -301,6 +305,114 @@ export const getFollowedArcs = async (req: Request, res: Response) => {
     res.status(200).json({ data: arcs });
   } catch (error) {
     console.error("Error fetching followed arcs:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const likeUpdate = async (req: Request, res: Response) => {
+  try {
+    const { arcId, updateId } = req.params as { arcId: string; updateId: string };
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    const update = arc.updates.id(updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    const alreadyLiked = update.likes.includes(userId);
+
+    if (alreadyLiked) {
+      return res.status(400).json({ message: "Already liked" });
+    }
+
+    update.likes.push(userId);
+
+    await arc.save();
+
+    res.status(200).json({ message: "Update liked", data: arc });
+  } catch (error) {
+    console.error("Error liking update:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const unlikeUpdate = async (req: Request, res: Response) => {
+  try {
+    const { arcId, updateId } = req.params as { arcId: string; updateId: string };
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    const update = arc.updates.id(updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    update.likes = update.likes.filter((id: string) => id !== userId) as any;
+
+    await arc.save();
+
+    res.status(200).json({ message: "Update unliked", data: arc });
+  } catch (error) {
+    console.error("Error unliking update:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const addComment = async (req: Request, res: Response) => {
+  try {
+    const { arcId, updateId } = req.params as { arcId: string; updateId: string };
+    const { userId, userName, userAvatar, text } = req.body;
+
+    if (!userId || !userName || !text) {
+      return res.status(400).json({ message: "userId, userName, and text are required" });
+    }
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    const update = arc.updates.id(updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    update.comments.push({
+      userId,
+      userName,
+      userAvatar: userAvatar || "",
+      text,
+      createdAt: new Date()
+    } as any);
+
+    await arc.save();
+
+    res.status(200).json({ message: "Comment added", data: arc });
+  } catch (error) {
+    console.error("Error adding comment:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

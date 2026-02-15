@@ -60,3 +60,20 @@ export const unfollowArc = (arcId: string, userId: string) =>
 
 export const getFollowedArcs = (userId: string) =>
   api.get(`/arcs/followed/${userId}`);
+
+export const likeUpdate = (arcId: string, updateId: string, userId: string) =>
+  api.post(`/arcs/${arcId}/updates/${updateId}/like`, { userId });
+
+export const unlikeUpdate = (arcId: string, updateId: string, userId: string) =>
+  api.post(`/arcs/${arcId}/updates/${updateId}/unlike`, { userId });
+
+export const addComment = (
+  arcId: string,
+  updateId: string,
+  data: {
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    text: string;
+  }
+) => api.post(`/arcs/${arcId}/updates/${updateId}/comment`, data);

@@ -19,6 +19,8 @@ export const getFeed = async (req: Request, res: Response) => {
           updateType: update.type,
           updateText: update.text,
           updateImages: update.images,
+          updateLikes: update.likes || [],
+          updateComments: update.comments || [],
           updateCreatedAt: update.createdAt,
           arcId: arc._id,
           arcTitle: arc.title,
@@ -41,6 +43,8 @@ export const getFeed = async (req: Request, res: Response) => {
             updateType: update.type,
             updateText: update.text,
             updateImages: update.images,
+            updateLikes: update.likes || [],
+            updateComments: update.comments || [],
             updateCreatedAt: update.createdAt,
             arcId: arc._id,
             arcTitle: arc.title,
@@ -59,7 +63,6 @@ export const getFeed = async (req: Request, res: Response) => {
     allUpdates = allUpdates.slice(0, 20);
 
     const uniqueUserIds = [...new Set(allUpdates.map(u => u.arcUserId))];
-
     const users = await User.find({
       clerkUserId: { $in: uniqueUserIds }
     });
@@ -83,5 +86,4 @@ export const getFeed = async (req: Request, res: Response) => {
     console.error("Error fetching feed:", error);
     res.status(500).json({ message: "Server error" });
   }
-}; 
-
+};
