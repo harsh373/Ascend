@@ -87,7 +87,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-12 w-80 bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg max-h-96 overflow-y-auto z-50">
+        <div className="absolute right-0 top-12 w-[min(320px,calc(100vw-2rem))] bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg max-h-96 overflow-y-auto z-[100]">
           <div className="p-4 border-b border-zinc-800">
             <h3 className="font-bold text-white">Notifications</h3>
           </div>
