@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Arc from "../models/arcModel";
+import { createNotification } from "../utils/notificationHelper";
 
 export const createArc = async (req: Request, res: Response) => {
   try {
@@ -259,6 +260,8 @@ export const followArc = async (req: Request, res: Response) => {
 
     await arc.save();
 
+    await createNotification(arc.userId, userId, "FOLLOW_ARC", arc._id.toString());
+
     res.status(200).json({ message: "Arc followed", data: arc });
   } catch (error) {
     console.error("Error following arc:", error);
@@ -340,6 +343,10 @@ export const likeUpdate = async (req: Request, res: Response) => {
 
     await arc.save();
 
+    if (userId !== arc.userId) {
+      await createNotification(arc.userId, userId, "LIKE", `${arc._id.toString()}:${updateId}`);
+    }
+
     res.status(200).json({ message: "Update liked", data: arc });
   } catch (error) {
     console.error("Error liking update:", error);
@@ -409,6 +416,8 @@ export const addComment = async (req: Request, res: Response) => {
     } as any);
 
     await arc.save();
+
+    await createNotification(arc.userId, userId, "COMMENT", `${arc._id.toString()}:${updateId}`);
 
     res.status(200).json({ message: "Comment added", data: arc });
   } catch (error) {

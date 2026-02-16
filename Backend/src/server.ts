@@ -15,13 +15,11 @@ import challengeRoutes from "./routes/challengeRoutes"
 import profileRoutes from "./routes/profileRoutes"
 import feedRoutes from "./routes/arcRoutes"
 import arcRoutes from "./routes/arcRoutes"
-
-
+import notificationRoutes from "./routes/notificationRoutes"
 
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
 let isConnected = false;
@@ -35,9 +33,6 @@ app.use(async (_req, _res, next) => {
 });
 
 app.use(clerkMiddleware());
-//making a comment to redeploy in vercel 
-
-
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Ascend API is running ");
@@ -54,7 +49,6 @@ app.use("/api/challenges", challengeRoutes)
 app.use("/api/profile", profileRoutes)
 app.use("/api/feed",feedRoutes)
 app.use("/api/arcs",arcRoutes)
+app.use("/api/notifications", notificationRoutes)
 
 export default app;
-
-

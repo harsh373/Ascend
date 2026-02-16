@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { 
   getArcById, 
@@ -55,6 +55,7 @@ export default function ArcPage() {
   const { arcId } = useParams();
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [arc, setArc] = useState<Arc | null>(null);
   const [arcOwnerProfile, setArcOwnerProfile] = useState<{ username: string; profileImage: string } | null>(null);
@@ -95,6 +96,14 @@ export default function ArcPage() {
 
     loadArc();
   }, [arcId]);
+
+  useEffect(() => {
+    if (location.state?.openCommentPanel && location.state?.updateId) {
+      setActiveUpdateId(location.state.updateId);
+      setCommentPanelOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const loadArc = async () => {
     if (!arcId) return;
