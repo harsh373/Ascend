@@ -31,36 +31,32 @@ export const getFeed = async (req: Request, res: Response) => {
       });
     });
 
-    if (allUpdates.length < 20) {
-      const otherArcs = await Arc.find({
-        "followers.userId": { $ne: userId }
-      }).sort({ lastUpdatedAt: -1 });
+    const otherArcs = await Arc.find({
+      "followers.userId": { $ne: userId }
+    }).sort({ lastUpdatedAt: -1 });
 
-      otherArcs.forEach(arc => {
-        arc.updates.forEach((update: any) => {
-          allUpdates.push({
-            updateId: update._id,
-            updateType: update.type,
-            updateText: update.text,
-            updateImages: update.images,
-            updateLikes: update.likes || [],
-            updateComments: update.comments || [],
-            updateCreatedAt: update.createdAt,
-            arcId: arc._id,
-            arcTitle: arc.title,
-            arcTheme: arc.theme,
-            arcCoverPhoto: arc.coverPhoto,
-            arcUserId: arc.userId
-          });
+    otherArcs.forEach(arc => {
+      arc.updates.forEach((update: any) => {
+        allUpdates.push({
+          updateId: update._id,
+          updateType: update.type,
+          updateText: update.text,
+          updateImages: update.images,
+          updateLikes: update.likes || [],
+          updateComments: update.comments || [],
+          updateCreatedAt: update.createdAt,
+          arcId: arc._id,
+          arcTitle: arc.title,
+          arcTheme: arc.theme,
+          arcCoverPhoto: arc.coverPhoto,
+          arcUserId: arc.userId
         });
       });
+    });
 
-      allUpdates.sort((a, b) => 
-        new Date(b.updateCreatedAt).getTime() - new Date(a.updateCreatedAt).getTime()
-      );
-    }
-
-    allUpdates = allUpdates.slice(0, 20);
+    allUpdates.sort((a, b) => 
+      new Date(b.updateCreatedAt).getTime() - new Date(a.updateCreatedAt).getTime()
+    );
 
     const uniqueUserIds = [...new Set(allUpdates.map(u => u.arcUserId))];
     const users = await User.find({
