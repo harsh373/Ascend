@@ -6,52 +6,37 @@ export const getFeed = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
-    const followedArcs = await Arc.find({
-      "followers.userId": userId
-    }).sort({ lastUpdatedAt: -1 });
+    const allArcs = await Arc.find().sort({ lastUpdatedAt: -1 });
 
     let allUpdates: any[] = [];
 
-    followedArcs.forEach(arc => {
-      arc.updates.forEach((update: any) => {
-        allUpdates.push({
-          updateId: update._id,
-          updateType: update.type,
-          updateText: update.text,
-          updateImages: update.images,
-          updateLikes: update.likes || [],
-          updateComments: update.comments || [],
-          updateCreatedAt: update.createdAt,
-          arcId: arc._id,
-          arcTitle: arc.title,
-          arcTheme: arc.theme,
-          arcCoverPhoto: arc.coverPhoto,
-          arcUserId: arc.userId
-        });
-      });
-    });
+    allArcs.forEach(arc => {
+      const isOwner = arc.userId === userId;
+      const isPublic = !arc.isPrivate;
+      const isApprovedFollower = arc.followers.some(
+        (f: any) => f.userId === userId && f.status === "approved"
+      );
 
-    const otherArcs = await Arc.find({
-      "followers.userId": { $ne: userId }
-    }).sort({ lastUpdatedAt: -1 });
+      const canView = isOwner || isPublic || isApprovedFollower;
 
-    otherArcs.forEach(arc => {
-      arc.updates.forEach((update: any) => {
-        allUpdates.push({
-          updateId: update._id,
-          updateType: update.type,
-          updateText: update.text,
-          updateImages: update.images,
-          updateLikes: update.likes || [],
-          updateComments: update.comments || [],
-          updateCreatedAt: update.createdAt,
-          arcId: arc._id,
-          arcTitle: arc.title,
-          arcTheme: arc.theme,
-          arcCoverPhoto: arc.coverPhoto,
-          arcUserId: arc.userId
+      if (canView) {
+        arc.updates.forEach((update: any) => {
+          allUpdates.push({
+            updateId: update._id,
+            updateType: update.type,
+            updateText: update.text,
+            updateImages: update.images,
+            updateLikes: update.likes || [],
+            updateComments: update.comments || [],
+            updateCreatedAt: update.createdAt,
+            arcId: arc._id,
+            arcTitle: arc.title,
+            arcTheme: arc.theme,
+            arcCoverPhoto: arc.coverPhoto,
+            arcUserId: arc.userId
+          });
         });
-      });
+      }
     });
 
     allUpdates.sort((a, b) => 

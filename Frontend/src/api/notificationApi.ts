@@ -8,7 +8,7 @@ export interface NotificationSender {
 
 export interface Notification {
   id: string;
-  type: "LIKE" | "COMMENT" | "FOLLOW_ARC";
+  type: "LIKE" | "COMMENT" | "FOLLOW_ARC" | "FOLLOW_REQUEST" | "FOLLOW_APPROVED";
   entity_id: string;
   is_read: boolean;
   created_at: string;
@@ -20,4 +20,3 @@ export const getNotifications = (userId: string) =>
 
 export const markAllAsRead = (userId: string) =>
   api.post("/notifications/read", { userId });
-

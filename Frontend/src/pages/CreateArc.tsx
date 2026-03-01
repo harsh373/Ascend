@@ -19,6 +19,7 @@ export default function CreateArc() {
 
   const [title, setTitle] = useState("");
   const [theme, setTheme] = useState(THEMES[0]);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -40,9 +41,9 @@ export default function CreateArc() {
       setCoverPreview(URL.createObjectURL(compressed));
       setError("");
     } catch (err: unknown) {
-  console.error(err);
-  setError(getErrorMessage(err));
-}
+      console.error(err);
+      setError(getErrorMessage(err));
+    }
   };
 
   const handleSubmit = async () => {
@@ -75,16 +76,15 @@ export default function CreateArc() {
         userId: user.id,
         title: title.trim(),
         theme,
-        coverPhoto: coverPhotoUrl
+        coverPhoto: coverPhotoUrl,
+        isPrivate
       });
 
       navigate(`/arc/${res.data.data._id}`);
-    } 
-  catch (err: unknown) {
-  console.error(err);
-  setError(getErrorMessage(err));
-}
-     finally {
+    } catch (err: unknown) {
+      console.error(err);
+      setError(getErrorMessage(err));
+    } finally {
       setLoading(false);
     }
   };
@@ -155,6 +155,19 @@ export default function CreateArc() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="isPrivate"
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+                className="w-5 h-5 bg-black border border-zinc-700 rounded cursor-pointer accent-red-600"
+              />
+              <label htmlFor="isPrivate" className="text-sm font-semibold text-zinc-300 cursor-pointer">
+                Make this arc private
+              </label>
             </div>
 
             {error && (

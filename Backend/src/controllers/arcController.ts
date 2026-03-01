@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import Arc from "../models/arcModel";
+import { User } from "../models/userModel";
 import { createNotification } from "../utils/notificationHelper";
 
 export const createArc = async (req: Request, res: Response) => {
   try {
-    const { userId, title, theme, coverPhoto } = req.body;
+    const { userId, title, theme, coverPhoto, isPrivate } = req.body;
 
     if (!userId || !title || !theme || !coverPhoto) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -16,6 +17,7 @@ export const createArc = async (req: Request, res: Response) => {
       theme,
       coverPhoto,
       archived: false,
+      isPrivate: isPrivate || false,
       updates: [],
       followers: [],
       lastUpdatedAt: new Date()
@@ -60,11 +62,28 @@ export const getUserArcs = async (req: Request, res: Response) => {
 export const getArcById = async (req: Request, res: Response) => {
   try {
     const { arcId } = req.params;
+    const { userId } = req.query;
 
     const arc = await Arc.findById(arcId);
 
     if (!arc) {
       return res.status(404).json({ message: "Arc not found" });
+    }
+
+    if (arc.isPrivate) {
+      const isOwner = arc.userId === userId;
+      const isApprovedFollower = arc.followers.some(
+        (f: any) => f.userId === userId && f.status === "approved"
+      );
+
+      if (!isOwner && !isApprovedFollower) {
+        return res.status(200).json({ 
+          data: {
+            ...arc.toObject(),
+            updates: []
+          }
+        });
+      }
     }
 
     res.status(200).json({ data: arc });
@@ -230,6 +249,34 @@ export const unarchiveArc = async (req: Request, res: Response) => {
   }
 };
 
+export const toggleArcPrivacy = async (req: Request, res: Response) => {
+  try {
+    const { arcId } = req.params;
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    arc.isPrivate = !arc.isPrivate;
+
+    if (arc.isPrivate) {
+      arc.followers = arc.followers.map((f: any) => ({
+        ...f,
+        status: "approved"
+      })) as any;
+    }
+
+    await arc.save();
+
+    res.status(200).json({ message: "Arc privacy updated", data: arc });
+  } catch (error) {
+    console.error("Error toggling arc privacy:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const followArc = async (req: Request, res: Response) => {
   try {
     const { arcId } = req.params;
@@ -253,14 +300,21 @@ export const followArc = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Already following this arc" });
     }
 
+    const followerStatus = arc.isPrivate ? "pending" : "approved";
+
     arc.followers.push({
       userId,
+      status: followerStatus,
       createdAt: new Date()
     } as any);
 
     await arc.save();
 
-    await createNotification(arc.userId, userId, "FOLLOW_ARC", arc._id.toString());
+    if (arc.isPrivate) {
+      await createNotification(arc.userId, userId, "FOLLOW_REQUEST", arc._id.toString());
+    } else {
+      await createNotification(arc.userId, userId, "FOLLOW_ARC", arc._id.toString());
+    }
 
     res.status(200).json({ message: "Arc followed", data: arc });
   } catch (error) {
@@ -293,6 +347,104 @@ export const unfollowArc = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Arc unfollowed", data: arc });
   } catch (error) {
     console.error("Error unfollowing arc:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const approveFollower = async (req: Request, res: Response) => {
+  try {
+    const { arcId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    const follower = arc.followers.find((f: any) => f.userId === userId);
+
+    if (!follower) {
+      return res.status(404).json({ message: "Follower not found" });
+    }
+
+    (follower as any).status = "approved";
+
+    await arc.save();
+
+    await createNotification(userId, arc.userId, "FOLLOW_APPROVED", arc._id.toString());
+
+    res.status(200).json({ message: "Follower approved", data: arc });
+  } catch (error) {
+    console.error("Error approving follower:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const rejectFollower = async (req: Request, res: Response) => {
+  try {
+    const { arcId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    arc.followers = arc.followers.filter(
+      (f: any) => f.userId !== userId
+    ) as any;
+
+    await arc.save();
+
+    res.status(200).json({ message: "Follower rejected", data: arc });
+  } catch (error) {
+    console.error("Error rejecting follower:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getPendingFollowers = async (req: Request, res: Response) => {
+  try {
+    const { arcId } = req.params;
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    const pendingFollowers = arc.followers.filter(
+      (f: any) => f.status === "pending"
+    );
+
+    const userIds = pendingFollowers.map((f: any) => f.userId);
+
+    const users = await User.find({ clerkUserId: { $in: userIds } })
+      .select("clerkUserId username profileImage");
+
+    const pendingWithUserInfo = pendingFollowers.map((f: any) => {
+      const user = users.find(u => u.clerkUserId === f.userId);
+      return {
+        userId: f.userId,
+        username: user?.username || "Unknown",
+        profileImage: user?.profileImage || "",
+        createdAt: f.createdAt
+      };
+    });
+
+    res.status(200).json({ data: pendingWithUserInfo });
+  } catch (error) {
+    console.error("Error fetching pending followers:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

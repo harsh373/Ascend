@@ -7,9 +7,14 @@ import {
   unfollowArc, 
   archiveArc, 
   unarchiveArc,
+  toggleArcPrivacy,
+  approveFollower,
+  rejectFollower,
+  getPendingFollowers,
   likeUpdate,
   unlikeUpdate,
-  addComment
+  addComment,
+  type PendingFollower
 } from "../api/arcApi";
 import { getUserProfile } from "../api/userApi";
 import AddArcUpdate from "../components/AddArcUpdate";
@@ -38,6 +43,12 @@ interface ArcUpdate {
   createdAt: string;
 }
 
+interface Follower {
+  userId: string;
+  status: "pending" | "approved";
+  createdAt: string;
+}
+
 interface Arc {
   _id: string;
   userId: string;
@@ -45,8 +56,9 @@ interface Arc {
   theme: string;
   coverPhoto: string;
   archived: boolean;
+  isPrivate: boolean;
   updates: ArcUpdate[];
-  followers: { userId: string; createdAt: string }[];
+  followers: Follower[];
   lastUpdatedAt: string;
   createdAt: string;
 }
@@ -66,13 +78,14 @@ export default function ArcPage() {
   const [expandedUpdates, setExpandedUpdates] = useState<Set<string>>(new Set());
   const [commentPanelOpen, setCommentPanelOpen] = useState(false);
   const [activeUpdateId, setActiveUpdateId] = useState<string | null>(null);
+  const [pendingFollowers, setPendingFollowers] = useState<PendingFollower[]>([]);
 
   useEffect(() => {
     const loadArc = async () => {
-      if (!arcId) return;
+      if (!arcId || !user) return;
       try {
         setLoading(true);
-        const res = await getArcById(arcId);
+        const res = await getArcById(arcId, user.id);
         const arcData = res.data.data;
         setArc(arcData);
 
@@ -87,6 +100,15 @@ export default function ArcPage() {
             console.error("Error loading arc owner profile:", err);
           }
         }
+
+        if (arcData.userId === user.id && arcData.isPrivate) {
+          try {
+            const pendingRes = await getPendingFollowers(arcId);
+            setPendingFollowers(pendingRes.data.data);
+          } catch (err) {
+            console.error("Error loading pending followers:", err);
+          }
+        }
       } catch (error) {
         console.error("Error loading arc:", error);
       } finally {
@@ -95,7 +117,7 @@ export default function ArcPage() {
     };
 
     loadArc();
-  }, [arcId]);
+  }, [arcId, user]);
 
   useEffect(() => {
     if (location.state?.openCommentPanel && location.state?.updateId) {
@@ -106,10 +128,10 @@ export default function ArcPage() {
   }, [location.state]);
 
   const loadArc = async () => {
-    if (!arcId) return;
+    if (!arcId || !user) return;
     try {
       setLoading(true);
-      const res = await getArcById(arcId);
+      const res = await getArcById(arcId, user.id);
       const arcData = res.data.data;
       setArc(arcData);
 
@@ -122,6 +144,15 @@ export default function ArcPage() {
           });
         } catch (err) {
           console.error("Error loading arc owner profile:", err);
+        }
+      }
+
+      if (arcData.userId === user.id && arcData.isPrivate) {
+        try {
+          const pendingRes = await getPendingFollowers(arcId);
+          setPendingFollowers(pendingRes.data.data);
+        } catch (err) {
+          console.error("Error loading pending followers:", err);
         }
       }
     } catch (error) {
@@ -210,6 +241,39 @@ export default function ArcPage() {
     }
   };
 
+  const handlePrivacyToggle = async () => {
+    if (!arc || !user) return;
+
+    try {
+      await toggleArcPrivacy(arc._id);
+      loadArc();
+    } catch (error) {
+      console.error("Error toggling privacy:", error);
+    }
+  };
+
+  const handleApproveFollower = async (userId: string) => {
+    if (!arc) return;
+
+    try {
+      await approveFollower(arc._id, userId);
+      loadArc();
+    } catch (error) {
+      console.error("Error approving follower:", error);
+    }
+  };
+
+  const handleRejectFollower = async (userId: string) => {
+    if (!arc) return;
+
+    try {
+      await rejectFollower(arc._id, userId);
+      loadArc();
+    } catch (error) {
+      console.error("Error rejecting follower:", error);
+    }
+  };
+
   if (loading) {
     return <LoadingSkeleton />;
   }
@@ -222,8 +286,13 @@ export default function ArcPage() {
     );
   }
 
-  const isFollowing = arc.followers.some(f => f.userId === user?.id) || false;
+  const myFollowerStatus = arc.followers.find(f => f.userId === user?.id);
+  const isFollowing = !!myFollowerStatus;
+  const isPending = myFollowerStatus?.status === "pending";
+  const isApproved = myFollowerStatus?.status === "approved";
   const isOwner = arc.userId === user?.id;
+
+  const canViewUpdates = isOwner || !arc.isPrivate || isApproved;
 
   const handleFollowToggle = async () => {
     if (!arc || !user) return;
@@ -304,6 +373,15 @@ export default function ArcPage() {
 
   const activeUpdate = arc.updates.find(u => u._id === activeUpdateId);
 
+  const getFollowButtonText = () => {
+    if (!arc.isPrivate) {
+      return isFollowing ? "Unfollow" : "Follow";
+    }
+    if (isPending) return "Pending Approval";
+    if (isApproved) return "Following";
+    return "Request to Follow";
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
       <div
@@ -316,6 +394,26 @@ export default function ArcPage() {
           <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase">
             {arc.theme}
           </span>
+
+          {arc.isPrivate && (
+            <button
+              onClick={isOwner ? handlePrivacyToggle : undefined}
+              className={`px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase ${
+                isOwner ? 'hover:bg-purple-500/30 cursor-pointer transition' : 'cursor-default'
+              }`}
+            >
+              🔒 Private
+            </button>
+          )}
+
+          {!arc.isPrivate && isOwner && (
+            <button
+              onClick={handlePrivacyToggle}
+              className="px-3 py-1 bg-zinc-500/20 text-zinc-400 border border-zinc-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase hover:bg-zinc-500/30 cursor-pointer transition"
+            >
+              🌐 Public
+            </button>
+          )}
           
           {arc.archived && (
             <span className="px-3 py-1 bg-zinc-500/20 text-zinc-400 border border-zinc-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase">
@@ -386,22 +484,73 @@ export default function ArcPage() {
             ) : (
               <button
                 onClick={handleFollowToggle}
+                disabled={isPending}
                 className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition ${
                   isFollowing
                     ? "bg-zinc-800 hover:bg-zinc-700 text-white"
                     : "bg-red-600 hover:bg-red-500 text-white"
-                }`}
+                } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                {isFollowing ? "Unfollow" : "Follow"}
+                {getFollowButtonText()}
               </button>
             )}
           </div>
         </div>
 
+        {isOwner && arc.isPrivate && pendingFollowers.length > 0 && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
+            <h3 className="text-xl font-bold mb-4">
+              Pending Requests ({pendingFollowers.length})
+            </h3>
+            <div className="space-y-3">
+              {pendingFollowers.map(follower => (
+                <div key={follower.userId} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 shrink-0">
+                      {follower.profileImage ? (
+                        <img
+                          src={follower.profileImage}
+                          alt={follower.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-400 text-sm font-bold">
+                          {follower.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-white font-semibold truncate">{follower.username}</span>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => handleApproveFollower(follower.userId)}
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-xs sm:text-sm font-semibold transition"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => handleRejectFollower(follower.userId)}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-xs sm:text-sm font-semibold transition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold mb-6">Updates</h2>
 
-          {arc.updates.length === 0 ? (
+          {!canViewUpdates ? (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
+              <div className="text-6xl mb-4">🔒</div>
+              <h3 className="text-2xl font-bold text-white mb-2">This arc is private</h3>
+              <p className="text-zinc-400 mb-6">Request to follow to see updates.</p>
+            </div>
+          ) : arc.updates.length === 0 ? (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
               <div className="text-6xl mb-4">📝</div>
               <h3 className="text-2xl font-bold text-white mb-2">No updates yet</h3>

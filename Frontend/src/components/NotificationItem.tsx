@@ -19,6 +19,10 @@ export default function NotificationItem({ notification, onClose }: Notification
         return `${sender.name} commented on your update`;
       case "FOLLOW_ARC":
         return `${sender.name} followed your arc`;
+      case "FOLLOW_REQUEST":
+        return `${sender.name} requested to follow your arc`;
+      case "FOLLOW_APPROVED":
+        return `${sender.name} approved your follow request`;
       default:
         return "";
     }
@@ -35,7 +39,7 @@ export default function NotificationItem({ notification, onClose }: Notification
     } else if (type === "LIKE") {
       const arcId = entity_id.split(":")[0];
       navigate(`/arc/${arcId}`);
-    } else if (type === "FOLLOW_ARC") {
+    } else if (type === "FOLLOW_ARC" || type === "FOLLOW_REQUEST" || type === "FOLLOW_APPROVED") {
       navigate(`/arc/${entity_id}`);
     }
   };
