@@ -374,12 +374,9 @@ export default function ArcPage() {
   const activeUpdate = arc.updates.find(u => u._id === activeUpdateId);
 
   const getFollowButtonText = () => {
-    if (!arc.isPrivate) {
-      return isFollowing ? "Unfollow" : "Follow";
-    }
-    if (isPending) return "Pending Approval";
+    if (isPending) return "Requested";
     if (isApproved) return "Following";
-    return "Request to Follow";
+    return "Follow";
   };
 
   return (
@@ -486,10 +483,12 @@ export default function ArcPage() {
                 onClick={handleFollowToggle}
                 disabled={isPending}
                 className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition ${
-                  isFollowing
+                  isApproved
                     ? "bg-zinc-800 hover:bg-zinc-700 text-white"
+                    : isPending
+                    ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-500 text-white"
-                } ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                }`}
               >
                 {getFollowButtonText()}
               </button>
