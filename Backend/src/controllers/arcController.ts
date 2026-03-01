@@ -77,10 +77,14 @@ export const getArcById = async (req: Request, res: Response) => {
       );
 
       if (!isOwner && !isApprovedFollower) {
+        const arcObject = arc.toObject();
+        const realUpdateCount = arcObject.updates.length;
+        
         return res.status(200).json({ 
           data: {
-            ...arc.toObject(),
-            updates: []
+            ...arcObject,
+            updates: [],
+            realUpdateCount
           }
         });
       }

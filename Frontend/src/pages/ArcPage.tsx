@@ -61,6 +61,7 @@ interface Arc {
   followers: Follower[];
   lastUpdatedAt: string;
   createdAt: string;
+  realUpdateCount?: number;
 }
 
 export default function ArcPage() {
@@ -452,7 +453,7 @@ export default function ArcPage() {
           <div className="flex gap-6 text-sm sm:text-base">
             <div>
               <span className="text-zinc-500 font-semibold">Updates</span>
-              <p className="text-white text-xl font-bold">{arc.updates.length}</p>
+              <p className="text-white text-xl font-bold">{arc.realUpdateCount ?? arc.updates.length}</p>
             </div>
             <div>
               <span className="text-zinc-500 font-semibold">Followers</span>
