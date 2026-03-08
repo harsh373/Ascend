@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { 
@@ -80,6 +80,8 @@ export default function ArcPage() {
   const [commentPanelOpen, setCommentPanelOpen] = useState(false);
   const [activeUpdateId, setActiveUpdateId] = useState<string | null>(null);
   const [pendingFollowers, setPendingFollowers] = useState<PendingFollower[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadArc = async () => {
@@ -127,6 +129,16 @@ export default function ArcPage() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   const loadArc = async () => {
     if (!arcId || !user) return;
@@ -224,18 +236,10 @@ export default function ArcPage() {
 
   const handleCommentSubmit = async (text: string) => {
     if (!arc || !user || !activeUpdateId) return;
-
     const userName = user.fullName || user.username || "Anonymous";
     const userAvatar = user.imageUrl || "";
-
     try {
-      await addComment(arc._id, activeUpdateId, {
-        userId: user.id,
-        userName,
-        userAvatar,
-        text
-      });
-
+      await addComment(arc._id, activeUpdateId, { userId: user.id, userName, userAvatar, text });
       loadArc();
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -244,7 +248,6 @@ export default function ArcPage() {
 
   const handlePrivacyToggle = async () => {
     if (!arc || !user) return;
-
     try {
       await toggleArcPrivacy(arc._id);
       loadArc();
@@ -255,7 +258,6 @@ export default function ArcPage() {
 
   const handleApproveFollower = async (userId: string) => {
     if (!arc) return;
-
     try {
       await approveFollower(arc._id, userId);
       loadArc();
@@ -266,7 +268,6 @@ export default function ArcPage() {
 
   const handleRejectFollower = async (userId: string) => {
     if (!arc) return;
-
     try {
       await rejectFollower(arc._id, userId);
       loadArc();
@@ -275,9 +276,33 @@ export default function ArcPage() {
     }
   };
 
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
+  const handleEndArc = async () => {
+    if (!arc || !user) return;
+    const confirmed = window.confirm(
+      arc.archived
+        ? "Restart this arc? You'll be able to add updates again."
+        : "End this arc? This marks your journey as complete."
+    );
+    if (!confirmed) return;
+    try {
+      if (arc.archived) {
+        await unarchiveArc(arc._id);
+      } else {
+        await archiveArc(arc._id);
+      }
+      setMenuOpen(false);
+      loadArc();
+    } catch (error) {
+      console.error("Error ending arc:", error);
+    }
+  };
+
+  const handleInviteWitnesses = () => {
+    setMenuOpen(false);
+    navigate(`/arc/${arcId}/witness`);
+  };
+
+  if (loading) return <LoadingSkeleton />;
 
   if (!arc) {
     return (
@@ -288,16 +313,14 @@ export default function ArcPage() {
   }
 
   const myFollowerStatus = arc.followers.find(f => f.userId === user?.id);
-  const isFollowing = !!myFollowerStatus;
   const isPending = myFollowerStatus?.status === "pending";
   const isApproved = myFollowerStatus?.status === "approved";
+  const isFollowing = !!myFollowerStatus;
   const isOwner = arc.userId === user?.id;
-
   const canViewUpdates = isOwner || !arc.isPrivate || isApproved;
 
   const handleFollowToggle = async () => {
     if (!arc || !user) return;
-
     try {
       if (isFollowing) {
         await unfollowArc(arc._id, user.id);
@@ -310,38 +333,13 @@ export default function ArcPage() {
     }
   };
 
-  const handleArchiveToggle = async () => {
-    if (!arc || !user) return;
-
-    const confirmed = window.confirm(
-      arc.archived
-        ? "Are you sure you want to unarchive this arc?"
-        : "Are you sure you want to archive this arc? You won't be able to add new updates."
-    );
-
-    if (!confirmed) return;
-
-    try {
-      if (arc.archived) {
-        await unarchiveArc(arc._id);
-      } else {
-        await archiveArc(arc._id);
-      }
-      loadArc();
-    } catch (error) {
-      console.error("Error toggling archive:", error);
-    }
-  };
-
   const openLightbox = (images: string[], index: number) => {
     setLightboxImages(images);
     setLightboxIndex(index);
   };
 
   const handleProfileClick = () => {
-    if (arc?.userId) {
-      navigate(`/profile/${arc.userId}`);
-    }
+    if (arc?.userId) navigate(`/profile/${arc.userId}`);
   };
 
   const getUpdateColor = (type: string) => {
@@ -357,11 +355,8 @@ export default function ArcPage() {
   const toggleExpanded = (updateId: string) => {
     setExpandedUpdates(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(updateId)) {
-        newSet.delete(updateId);
-      } else {
-        newSet.add(updateId);
-      }
+      if (newSet.has(updateId)) newSet.delete(updateId);
+      else newSet.add(updateId);
       return newSet;
     });
   };
@@ -387,7 +382,7 @@ export default function ArcPage() {
         style={{ backgroundImage: `url(${arc.coverPhoto})` }}
       >
         <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
-        
+
         <div className="absolute top-4 right-4 flex gap-3">
           <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase">
             {arc.theme}
@@ -397,7 +392,7 @@ export default function ArcPage() {
             <button
               onClick={isOwner ? handlePrivacyToggle : undefined}
               className={`px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase ${
-                isOwner ? 'hover:bg-purple-500/30 cursor-pointer transition' : 'cursor-default'
+                isOwner ? "hover:bg-purple-500/30 cursor-pointer transition" : "cursor-default"
               }`}
             >
               🔒 Private
@@ -412,10 +407,10 @@ export default function ArcPage() {
               🌐 Public
             </button>
           )}
-          
+
           {arc.archived && (
             <span className="px-3 py-1 bg-zinc-500/20 text-zinc-400 border border-zinc-500/30 rounded-lg text-xs sm:text-sm font-semibold uppercase">
-              Archived
+              Ended
             </span>
           )}
         </div>
@@ -461,7 +456,7 @@ export default function ArcPage() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             {isOwner ? (
               <>
                 {!arc.archived && (
@@ -472,12 +467,32 @@ export default function ArcPage() {
                     + Add Update
                   </button>
                 )}
-                <button
-                  onClick={handleArchiveToggle}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-semibold transition"
-                >
-                  {arc.archived ? "Unarchive" : "Archive"}
-                </button>
+
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setMenuOpen(prev => !prev)}
+                    className="px-3 py-2 sm:py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-bold transition text-zinc-300 text-lg leading-none"
+                  >
+                    •••
+                  </button>
+
+                  {menuOpen && (
+                    <div className="absolute right-0 top-12 w-48 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                      <button
+                        onClick={handleInviteWitnesses}
+                        className="w-full text-left px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 transition"
+                      >
+                        Invite Witnesses
+                      </button>
+                      <button
+                        onClick={handleEndArc}
+                        className="w-full text-left px-4 py-3 text-sm font-semibold text-red-400 hover:bg-zinc-800 transition"
+                      >
+                        {arc.archived ? "Restart Arc" : "End Arc"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <button
@@ -508,11 +523,7 @@ export default function ArcPage() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 shrink-0">
                       {follower.profileImage ? (
-                        <img
-                          src={follower.profileImage}
-                          alt={follower.username}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={follower.profileImage} alt={follower.username} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-zinc-400 text-sm font-bold">
                           {follower.username.charAt(0).toUpperCase()}
@@ -522,18 +533,8 @@ export default function ArcPage() {
                     <span className="text-white font-semibold truncate">{follower.username}</span>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => handleApproveFollower(follower.userId)}
-                      className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-xs sm:text-sm font-semibold transition"
-                    >
-                      ✓
-                    </button>
-                    <button
-                      onClick={() => handleRejectFollower(follower.userId)}
-                      className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-xs sm:text-sm font-semibold transition"
-                    >
-                      ✕
-                    </button>
+                    <button onClick={() => handleApproveFollower(follower.userId)} className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-xs sm:text-sm font-semibold transition">✓</button>
+                    <button onClick={() => handleRejectFollower(follower.userId)} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-xs sm:text-sm font-semibold transition">✕</button>
                   </div>
                 </div>
               ))}
@@ -556,10 +557,7 @@ export default function ArcPage() {
               <h3 className="text-2xl font-bold text-white mb-2">No updates yet</h3>
               <p className="text-zinc-400 mb-6">Start documenting your journey.</p>
               {isOwner && !arc.archived && (
-                <button
-                  onClick={() => setShowAddUpdate(true)}
-                  className="bg-red-600 hover:bg-red-500 px-6 py-3 rounded-lg font-semibold transition"
-                >
+                <button onClick={() => setShowAddUpdate(true)} className="bg-red-600 hover:bg-red-500 px-6 py-3 rounded-lg font-semibold transition">
                   Add First Update
                 </button>
               )}
@@ -585,27 +583,20 @@ export default function ArcPage() {
                   </p>
 
                   {update.text.length > 200 && (
-                    <button
-                      onClick={() => toggleExpanded(update._id)}
-                      className="text-red-500 hover:text-red-400 text-sm font-semibold mb-4"
-                    >
+                    <button onClick={() => toggleExpanded(update._id)} className="text-red-500 hover:text-red-400 text-sm font-semibold mb-4">
                       {expandedUpdates.has(update._id) ? "Show less" : "Read more"}
                     </button>
                   )}
 
                   {update.images && update.images.length > 0 && (
-                    <div className={`grid gap-4 mb-4 ${update.images.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className={`grid gap-4 mb-4 ${update.images.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
                       {update.images.map((img, idx) => (
                         <div
                           key={idx}
                           className="relative w-full aspect-video overflow-hidden rounded-lg border border-zinc-700 hover:border-red-500 transition cursor-pointer"
                           onClick={() => openLightbox(update.images, idx)}
                         >
-                          <img
-                            src={img}
-                            alt={`Update image ${idx + 1}`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
+                          <img src={img} alt={`Update image ${idx + 1}`} className="absolute inset-0 w-full h-full object-cover" />
                         </div>
                       ))}
                     </div>
@@ -628,10 +619,7 @@ export default function ArcPage() {
         <AddArcUpdate
           arcId={arc._id}
           onClose={() => setShowAddUpdate(false)}
-          onSuccess={() => {
-            setShowAddUpdate(false);
-            loadArc();
-          }}
+          onSuccess={() => { setShowAddUpdate(false); loadArc(); }}
         />
       )}
 
