@@ -5,22 +5,14 @@ import Navbar from "./components/Navbar";
 import MobileNav from "./components/MobileNav";
 import { Route, Routes } from "react-router-dom";
 
-
 import Profile from "./pages/Profile";
 import Footer from "./components/Footer";
 
-
-
 import LandingPage from "./pages/LandingPage";
-
 
 import ReactGA from "react-ga4";
 
-
 import AuthGate from "./components/AuthGate";
-
-
-
 
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import { Analytics } from "@vercel/analytics/react";
@@ -32,19 +24,22 @@ import CreateArc from "./pages/CreateArc";
 import Search from "./pages/Search";
 import Create from "./pages/Create";
 import Settings from "./pages/Settings";
+import PublicArcPage from "./pages/PublicArcPage";
+import WitnessScreen from "./pages/WitnessScreen";
 
 ReactGA.initialize(import.meta.env.VITE_GA_ID);
 
 function App() {
   return (
     <div className="min-h-screen bg-black flex flex-col w-full overflow-x-hidden">
-      <AnalyticsTracker /> 
+      <AnalyticsTracker />
       <ScrollToTop />
 
       <SignedOut>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/arc/public/:arcId" element={<PublicArcPage />} />
         </Routes>
       </SignedOut>
 
@@ -54,42 +49,31 @@ function App() {
 
         <main className="flex-1 w-full px-3 sm:px-6 max-w-full pt-12 pb-16">
           <Routes>
-
-            {/* HOME — only for onboarded users */}
             <Route
               path="/"
               element={
                 <AuthGate>
-                  <Feed/>
-                
+                  <Feed />
                 </AuthGate>
               }
             />
-              
+
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
-            
-            
-            
-            
-            
+
             <Route path="/create-arc" element={<CreateArc />} />
             <Route path="/arc/:arcId" element={<ArcPage />} />
-            <Route path="/search" element ={<Search/>}/>
+            <Route path="/arc/:arcId/witness" element={<WitnessScreen />} />
+            <Route path="/arc/public/:arcId" element={<ArcPage />} />
+            <Route path="/search" element={<Search />} />
             <Route path="/create" element={<Create />} />
             <Route path="/settings" element={<Settings />} />
-       
-     
-
-            
           </Routes>
         </main>
-        
+
         <Footer />
       </SignedIn>
-      <Analytics/>
-
-
+      <Analytics />
     </div>
   );
 }

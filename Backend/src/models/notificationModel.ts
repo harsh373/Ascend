@@ -5,7 +5,7 @@ const notificationSchema = new mongoose.Schema({
   senderId: { type: String, required: true },
   type: { 
     type: String, 
-    enum: ["LIKE", "COMMENT", "FOLLOW_ARC", "FOLLOW_REQUEST", "FOLLOW_APPROVED"],
+    enum: ["LIKE", "COMMENT", "FOLLOW_ARC", "FOLLOW_REQUEST", "FOLLOW_APPROVED", "ARC_INVITE"],
     required: true 
   },
   entityId: { type: String, required: true },

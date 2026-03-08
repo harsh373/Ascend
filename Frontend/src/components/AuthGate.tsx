@@ -1,6 +1,7 @@
 import { useEffect, useState, type JSX } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { getUserProfile, createUser } from "../api/userApi";
+import { followArc } from "../api/arcApi";
 
 export default function AuthGate({ children }: { children: JSX.Element }) {
   const { user, isLoaded } = useUser();
@@ -12,22 +13,31 @@ export default function AuthGate({ children }: { children: JSX.Element }) {
 
       try {
         await getUserProfile(user.id);
-        setReady(true);
       } catch {
-        console.log("User not in DB, creating...");
-        
         const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
         const username = user.username || user.emailAddresses[0]?.emailAddress.split("@")[0] || user.id.slice(0, 8);
-        
+
         await createUser(
           user.id,
           username,
           fullName || username,
           user.imageUrl || ""
         );
-        
-        setReady(true);
       }
+
+      const pendingArcId = localStorage.getItem("pendingFollowArcId");
+      if (pendingArcId) {
+        localStorage.removeItem("pendingFollowArcId");
+        try {
+          await followArc(pendingArcId, user.id);
+        } catch (err) {
+          console.error("Auto-follow failed:", err);
+        }
+        window.location.href = `/arc/${pendingArcId}`;
+        return;
+      }
+
+      setReady(true);
     };
 
     check();

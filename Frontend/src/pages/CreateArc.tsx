@@ -80,7 +80,7 @@ export default function CreateArc() {
         isPrivate
       });
 
-      navigate(`/arc/${res.data.data._id}`);
+      navigate(`/arc/${res.data.data._id}/witness`);
     } catch (err: unknown) {
       console.error(err);
       setError(getErrorMessage(err));

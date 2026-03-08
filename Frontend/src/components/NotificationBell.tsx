@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { getNotifications, markAllAsRead, type Notification } from "../api/notificationApi";
 import NotificationItem from "./NotificationItem";
@@ -10,12 +10,27 @@ export default function NotificationBell() {
   const [hasUnread, setHasUnread] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await getNotifications(user.id);
+      setNotifications(res.data.data);
+      setHasUnread(res.data.data.some(n => !n.is_read));
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!isLoaded || !user) return;
 
-    const loadNotifications = async () => {
+    let cancelled = false;
+
+    const fetchOnce = async () => {
+      if (!user) return;
       try {
         const res = await getNotifications(user.id);
+        if (cancelled) return;
         setNotifications(res.data.data);
         setHasUnread(res.data.data.some(n => !n.is_read));
       } catch (error) {
@@ -23,10 +38,16 @@ export default function NotificationBell() {
       }
     };
 
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 5000);
+    fetchOnce();
 
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      fetchOnce();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [isLoaded, user]);
 
   useEffect(() => {
@@ -91,7 +112,7 @@ export default function NotificationBell() {
           <div className="p-4 border-b border-zinc-800">
             <h3 className="font-bold text-white">Notifications</h3>
           </div>
-          
+
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-zinc-500">
               No notifications yet
@@ -103,6 +124,7 @@ export default function NotificationBell() {
                   key={notification.id}
                   notification={notification}
                   onClose={() => setIsOpen(false)}
+                  onRefresh={loadNotifications}
                 />
               ))}
             </div>

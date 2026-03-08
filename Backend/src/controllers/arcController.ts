@@ -581,3 +581,55 @@ export const addComment = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const getPublicArc = async (req: Request, res: Response) => {
+  try {
+    const { arcId } = req.params;
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    res.status(200).json({ data: arc });
+  } catch (error) {
+    console.error("Error fetching public arc:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const inviteToArc = async (req: Request, res: Response) => {
+  try {
+    const { arcId } = req.params;
+    const { ownerId, invitedUserId } = req.body;
+
+    if (!ownerId || !invitedUserId) {
+      return res.status(400).json({ message: "ownerId and invitedUserId are required" });
+    }
+
+    const arc = await Arc.findById(arcId);
+
+    if (!arc) {
+      return res.status(404).json({ message: "Arc not found" });
+    }
+
+    if (arc.userId !== ownerId) {
+      return res.status(403).json({ message: "Only the arc owner can invite" });
+    }
+
+    const alreadyFollowing = arc.followers.some((f: any) => f.userId === invitedUserId);
+
+    if (alreadyFollowing) {
+      return res.status(400).json({ message: "User is already following this arc" });
+    }
+
+    await createNotification(invitedUserId, ownerId, "ARC_INVITE", arcId as string);
+
+    res.status(200).json({ message: "Invite sent" });
+  } catch (error) {
+    console.error("Error inviting to arc:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
