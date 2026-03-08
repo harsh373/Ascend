@@ -18,54 +18,48 @@ export default function AddArcUpdate({ arcId, onClose, onSuccess }: AddArcUpdate
   const [error, setError] = useState("");
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const selectedFiles = Array.from(e.target.files || []);
-  
-  // Combine existing files + new files
-  const combinedFiles = [...files, ...selectedFiles];
-  
-  if (combinedFiles.length > 2) {
-    setError("Maximum 2 images allowed");
-    e.target.value = ""; // Reset input
-    return;
-  }
+    const selectedFiles = Array.from(e.target.files || []);
+    const combinedFiles = [...files, ...selectedFiles];
 
-  const validFiles: File[] = [];
-  const newPreviews: string[] = [];
-
-  // Process ALL files (existing + new)
-  for (const file of combinedFiles) {
-    const validationError = validateImage(file);
-    if (validationError) {
-      setError(validationError);
+    if (combinedFiles.length > 2) {
+      setError("Maximum 2 images allowed");
       e.target.value = "";
       return;
     }
 
-    try {
-      // Check if already compressed (existing file)
-      if (files.includes(file)) {
-        validFiles.push(file);
-        const existingIndex = files.indexOf(file);
-        newPreviews.push(previews[existingIndex]);
-      } else {
-        // Compress new file
-        const compressed = await compressImage(file);
-        validFiles.push(compressed);
-        newPreviews.push(URL.createObjectURL(compressed));
+    const validFiles: File[] = [];
+    const newPreviews: string[] = [];
+
+    for (const file of combinedFiles) {
+      const validationError = validateImage(file);
+      if (validationError) {
+        setError(validationError);
+        e.target.value = "";
+        return;
       }
-    } catch (err) {
-      
-      setError(getErrorMessage(err));
-      e.target.value = "";
-      return;
-    }
-  }
 
-  setFiles(validFiles);
-  setPreviews(newPreviews);
-  setError("");
-  e.target.value = ""; // Reset input for next selection
-};  
+      try {
+        if (files.includes(file)) {
+          validFiles.push(file);
+          const existingIndex = files.indexOf(file);
+          newPreviews.push(previews[existingIndex]);
+        } else {
+          const compressed = await compressImage(file);
+          validFiles.push(compressed);
+          newPreviews.push(URL.createObjectURL(compressed));
+        }
+      } catch (err) {
+        setError(getErrorMessage(err));
+        e.target.value = "";
+        return;
+      }
+    }
+
+    setFiles(validFiles);
+    setPreviews(newPreviews);
+    setError("");
+    e.target.value = "";
+  };
 
   const removeImage = (index: number) => {
     setFiles(files.filter((_, i) => i !== index));
@@ -97,14 +91,11 @@ export default function AddArcUpdate({ arcId, onClose, onSuccess }: AddArcUpdate
       });
 
       await uploadArcUpdateWithImages(arcId, formData);
-
       onSuccess();
     } catch (err: unknown) {
-    console.error(err);
-    setError(getErrorMessage(err));
-}
- 
-     finally {
+      console.error(err);
+      setError(getErrorMessage(err));
+    } finally {
       setLoading(false);
     }
   };
@@ -114,12 +105,7 @@ export default function AddArcUpdate({ arcId, onClose, onSuccess }: AddArcUpdate
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-white">Add Update</h2>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-white text-2xl"
-          >
-            ×
-          </button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white text-2xl">×</button>
         </div>
 
         <div className="space-y-6">
@@ -133,10 +119,8 @@ export default function AddArcUpdate({ arcId, onClose, onSuccess }: AddArcUpdate
               className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-red-500 transition"
             >
               <option value="reflection">Reflection</option>
+              <option value="progress">Progress</option>
               <option value="milestone">Milestone</option>
-              <option value="failure">Failure</option>
-              <option value="proof">Proof</option>
-              <option value="comparison">Comparison</option>
             </select>
           </div>
 
@@ -165,7 +149,7 @@ export default function AddArcUpdate({ arcId, onClose, onSuccess }: AddArcUpdate
               onChange={handleFileChange}
               className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-red-600 file:text-white file:font-semibold hover:file:bg-red-500 file:cursor-pointer"
             />
-            
+
             {previews.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-4">
                 {previews.map((preview, idx) => (
@@ -187,9 +171,7 @@ export default function AddArcUpdate({ arcId, onClose, onSuccess }: AddArcUpdate
             )}
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <div className="flex gap-3">
             <button

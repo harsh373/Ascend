@@ -131,10 +131,9 @@ export default function PublicArcPage() {
 
   const getUpdateColor = (type: string) => {
     switch (type) {
+      case "progress": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
       case "milestone": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "failure": return "bg-red-500/10 text-red-400 border-red-500/20";
-      case "proof": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-      case "comparison": return "bg-purple-500/10 text-purple-400 border-purple-500/20";
+      case "reflection": return "bg-purple-500/10 text-purple-400 border-purple-500/20";
       default: return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
     }
   };
