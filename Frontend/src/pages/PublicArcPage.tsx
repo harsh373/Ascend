@@ -140,7 +140,7 @@ export default function PublicArcPage() {
 
   const getWhatsAppLink = () => {
     const arcLink = `https://3ascend.com/arc/public/${arcId}`;
-    const message = `Hey, I just started a journey on 3ascend and I want you to follow along. Check it out here: ${arcLink}`;
+    const message = `Hey, I just started a journey on Ascend and I want you to follow along. Check it out here: ${arcLink}`;
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
   };
 
@@ -325,7 +325,7 @@ export default function PublicArcPage() {
                 onClick={handleInteraction}
                 className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg transition"
               >
-                Join 3ascend
+                Join Ascend
               </button>
             </div>
           </div>
